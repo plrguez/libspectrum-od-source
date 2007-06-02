@@ -1,1 +1,6 @@
-/test.exe
+/.deps
+/.dirstamp
+/.libs
+/Makefile
+/Makefile.in
+/test
