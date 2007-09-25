@@ -3,5 +3,6 @@
 /.libs
 /Makefile
 /Makefile.in
+/complete-tzx.tzx
 /test
 /test.exe
