@@ -199,3 +199,4 @@ int ulaplus_active
 int ulaplus_palette_enabled
 libspectrum_byte ulaplus_current_register
 libspectrum_byte* ulaplus_palette 1
+libspectrum_byte ulaplus_ff_register

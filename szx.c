@@ -2179,6 +2179,12 @@ read_pltt_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
   memcpy( palette, *buffer, 64 );
   (*buffer) += 64;
 
+  /* Specifications previous to v1.1a didn't have this register */
+  if( data_length > 66 ) {
+    libspectrum_snap_set_ulaplus_ff_register( snap, **buffer );
+    (*buffer)++;
+  }
+
   return LIBSPECTRUM_ERROR_NONE;
 }
 
@@ -3962,7 +3968,7 @@ write_pltt_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 {
   libspectrum_byte flags = 0;
 
-  write_chunk_header( buffer, ptr, length, ZXSTBID_PALETTE, 66 );
+  write_chunk_header( buffer, ptr, length, ZXSTBID_PALETTE, 67 );
 
   if( libspectrum_snap_ulaplus_palette_enabled( snap ) )
     flags |= ZXSTPALETTE_ENABLED;
@@ -3972,6 +3978,8 @@ write_pltt_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 
   memcpy( *ptr, libspectrum_snap_ulaplus_palette( snap, 0 ), 64 );
   (*ptr) += 64;
+
+  *(*ptr)++ = libspectrum_snap_ulaplus_ff_register( snap );
 
   return LIBSPECTRUM_ERROR_NONE;
 }

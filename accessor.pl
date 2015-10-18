@@ -246,6 +246,7 @@ struct libspectrum_snap {
   int ulaplus_palette_enabled;
   libspectrum_byte ulaplus_current_register;
   libspectrum_byte* ulaplus_palette[1];
+  libspectrum_byte ulaplus_ff_register;
 };
 
 /* Initialise a libspectrum_snap structure */
