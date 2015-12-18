@@ -1024,3 +1024,4 @@ hacking/ChangeLog: the small scale changelog for libspectrum
 20150831 test/turbo-zeropilot.tzx: add mime-type property (Sergio).
 20151018 accessor.pl,snap_accessors.txt,snapshot.c,szx.c: implement ULAplus
          Timex screen mode support (thanks, Andrew Owen and Fred) (Sergio).
+20151218 szx.c: more from switch to using libspectrum_new (Sergio).

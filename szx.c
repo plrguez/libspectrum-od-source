@@ -2176,7 +2176,7 @@ read_pltt_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
   libspectrum_snap_set_ulaplus_palette_enabled( snap, flags & ZXSTPALETTE_ENABLED );
   libspectrum_snap_set_ulaplus_current_register( snap, **buffer ); (*buffer)++;
 
-  palette = libspectrum_malloc( 64 * sizeof( libspectrum_byte ) );
+  palette = libspectrum_new( libspectrum_byte, 64 );
   libspectrum_snap_set_ulaplus_palette( snap, 0, palette );
   memcpy( palette, *buffer, 64 );
   (*buffer) += 64;
