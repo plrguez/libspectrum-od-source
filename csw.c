@@ -31,7 +31,7 @@
 #include "tape_block.h"
 
 /* The .csw file signature (first 23 bytes) */
-const char *libspectrum_csw_signature = "Compressed Square Wave\x1a";
+static const char * const csw_signature = "Compressed Square Wave\x1a";
 
 libspectrum_error
 libspectrum_csw_read( libspectrum_tape *tape,
@@ -42,18 +42,18 @@ libspectrum_csw_read( libspectrum_tape *tape,
 
   int compressed;
 
-  size_t signature_length = strlen( libspectrum_csw_signature );
+  size_t signature_length = strlen( csw_signature );
 
   if( length < signature_length + 2 ) goto csw_short;
 
-  if( memcmp( libspectrum_csw_signature, buffer, signature_length ) ) {
+  if( memcmp( csw_signature, buffer, signature_length ) ) {
     libspectrum_print_error( LIBSPECTRUM_ERROR_SIGNATURE,
 			     "libspectrum_csw_read: wrong signature" );
     return LIBSPECTRUM_ERROR_SIGNATURE;
   }
 
   /* Claim memory for the block */
-  block = libspectrum_malloc( sizeof( *block ) );
+  block = libspectrum_new( libspectrum_tape_block, 1 );
 
   /* Set the block type */
   block->type = LIBSPECTRUM_TAPE_BLOCK_RLE_PULSE;
@@ -126,7 +126,7 @@ libspectrum_csw_read( libspectrum_tape *tape,
   } else {
     /* Claim memory for the data (it's one big lump) */
     csw_block->length = length;
-    csw_block->data = libspectrum_malloc( length );
+    csw_block->data = libspectrum_new( libspectrum_byte, length );
 
     /* Copy the data across */
     memcpy( csw_block->data, buffer, length );
@@ -320,12 +320,12 @@ libspectrum_csw_write( libspectrum_byte **buffer, size_t *length,
 
   libspectrum_byte *ptr = *buffer;
 
-  size_t signature_length = strlen( libspectrum_csw_signature );
+  size_t signature_length = strlen( csw_signature );
 
   /* First, write the .csw signature and the rest of the header */
   libspectrum_make_room( buffer, signature_length + 29, &ptr, length );
 
-  memcpy( ptr, libspectrum_csw_signature, signature_length );
+  memcpy( ptr, csw_signature, signature_length );
   ptr += signature_length;
 
   *ptr++ = 2;		/* Major version number */

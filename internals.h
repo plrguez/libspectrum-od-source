@@ -51,6 +51,37 @@
 #endif				/* _MSC_VER > 1200 */
 #endif				/* #ifdef _MSC_VER */
 
+#if defined(__GNUC__) && defined(__GNUC_MINOR__)
+  #define GNUC_VERSION \
+    (__GNUC__ << 16) + __GNUC_MINOR__
+  #define GNUC_PREREQ(maj, min) \
+    (GNUC_VERSION >= ((maj) << 16) + (min))
+#else
+  #define GNUC_PREREQ(maj, min) 0
+#endif
+
+#define BUILD_BUG_ON_ZERO(e) \
+  (sizeof(struct { int:-!!(e) * 1234; }))
+
+#if !GNUC_PREREQ(3, 1) || defined( __STRICT_ANSI__ )
+  #define MUST_BE_ARRAY(a) \
+    BUILD_BUG_ON_ZERO(sizeof(a) % sizeof(*a))
+#else
+  #define SAME_TYPE(a, b) \
+    __builtin_types_compatible_p(typeof(a), typeof(b))
+  #define MUST_BE_ARRAY(a) \
+    BUILD_BUG_ON_ZERO(SAME_TYPE((a), &(*a)))
+#endif
+
+#define ARRAY_SIZE(a) ( \
+  (sizeof(a) / sizeof(*a)) \
+   + MUST_BE_ARRAY(a))
+
+/* C90 lacks SIZE_MAX.  size_t is always unsigned so this is safe. */
+#ifndef SIZE_MAX
+#define SIZE_MAX (~(size_t)0)
+#endif
+
 /* VC6 lacks M_LN2, and VS2003+ require _USE_MATH_DEFINES defined before math.h
  */
 #ifndef M_LN2
@@ -104,7 +135,7 @@ libspectrum_bzip2_inflate( const libspectrum_byte *bzptr, size_t bzlength,
 
 /* The TZX file signature */
 
-extern const char *libspectrum_tzx_signature;
+extern const char * const libspectrum_tzx_signature;
 
 /* Convert a 48K memory dump into separate RAM pages */
 

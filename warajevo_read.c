@@ -211,9 +211,8 @@ get_next_block( size_t *offset, const libspectrum_byte *buffer,
   int error;
   libspectrum_dword next_block;
 
-  /* Check we have enough data, and check for pointer wrap */
-  if( buffer + 8 + *offset > end || buffer + *offset < buffer || 
-      buffer + 8 + *offset < buffer ) {
+  /* Check we have enough data */
+  if( end - buffer < *offset || end - buffer - *offset < 8 ) {
     libspectrum_print_error(
       LIBSPECTRUM_ERROR_CORRUPT,
       "libspectrum_warajevo_read: not enough data in buffer"
@@ -474,7 +473,7 @@ read_rom_block( libspectrum_tape *tape, const libspectrum_byte *ptr,
   }
 
   /* Allocate memory for the data */
-  block_data = libspectrum_malloc( length * sizeof( *block_data ) );
+  block_data = libspectrum_new( libspectrum_byte, length );
   libspectrum_tape_block_set_data( block, block_data );
 
   /* Add flag */
@@ -535,7 +534,7 @@ read_raw_data( libspectrum_tape *tape, const libspectrum_byte *ptr,
   }
 
   /* Allocate memory for the data */
-  block_data = libspectrum_malloc( length * sizeof( libspectrum_byte ) );
+  block_data = libspectrum_new( libspectrum_byte, length );
   libspectrum_tape_block_set_data( block, block_data );
 
   if( compressed_size != decompressed_size ) {
@@ -595,8 +594,9 @@ read_raw_data( libspectrum_tape *tape, const libspectrum_byte *ptr,
     /* Combine the two blocks */
     size_t new_length = libspectrum_tape_block_data_length( last_block ) + 
                           length;
-    block_data = libspectrum_realloc( libspectrum_tape_block_data( last_block ),
-                                      new_length * sizeof( libspectrum_byte ) );
+    block_data = libspectrum_renew( libspectrum_byte,
+				    libspectrum_tape_block_data( last_block ),
+				    new_length );
 
     memcpy( block_data + libspectrum_tape_block_data_length( last_block ),
             libspectrum_tape_block_data( block ), length );

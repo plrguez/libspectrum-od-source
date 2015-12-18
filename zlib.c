@@ -38,6 +38,7 @@
 #include <unistd.h>
 #endif			/* #ifdef HAVE_UNISTD_H */
 
+#define ZLIB_CONST
 #include <zlib.h>
 
 #include "internals.h"
@@ -86,8 +87,7 @@ zlib_inflate( const libspectrum_byte *gzptr, size_t gzlength,
   /* Use default memory management */
   stream.zalloc = Z_NULL; stream.zfree = Z_NULL; stream.opaque = Z_NULL;
 
-  /* Cast needed to avoid warning about losing const */
-  stream.next_in = (libspectrum_byte*)gzptr; stream.avail_in = gzlength;
+  stream.next_in = gzptr; stream.avail_in = gzlength;
 
   if( gzip_hack ) { 
 
@@ -129,7 +129,7 @@ zlib_inflate( const libspectrum_byte *gzptr, size_t gzlength,
 
   if( *outlength ) {
 
-    *outptr = libspectrum_malloc( *outlength );
+    *outptr = libspectrum_new( libspectrum_byte, *outlength );
     stream.next_out = *outptr; stream.avail_out = *outlength;
     error = inflate( &stream, Z_FINISH );
 
@@ -143,7 +143,7 @@ zlib_inflate( const libspectrum_byte *gzptr, size_t gzlength,
       libspectrum_byte *ptr;
 
       *outlength += 16384; stream.avail_out += 16384;
-      ptr = libspectrum_realloc( *outptr, *outlength );
+      ptr = libspectrum_renew( libspectrum_byte, *outptr, *outlength );
       stream.next_out = ptr + ( stream.next_out - *outptr );
       *outptr = ptr;
 
@@ -154,7 +154,7 @@ zlib_inflate( const libspectrum_byte *gzptr, size_t gzlength,
   }
 
   *outlength = stream.next_out - *outptr;
-  *outptr = libspectrum_realloc( *outptr, *outlength );
+  *outptr = libspectrum_renew( libspectrum_byte, *outptr, *outlength );
 
   switch( error ) {
 
@@ -318,7 +318,7 @@ libspectrum_zlib_compress( const libspectrum_byte *data, size_t length,
   uLongf gzl = (uLongf)( length * 1.001 ) + 12;
   int gzret;
 
-  *gzptr = libspectrum_malloc( gzl );
+  *gzptr = libspectrum_new( libspectrum_byte, gzl );
   gzret = compress2( *gzptr, &gzl, data, length, Z_BEST_COMPRESSION );
 
   switch (gzret) {

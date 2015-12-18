@@ -29,6 +29,12 @@
 
 #include "internals.h"
 
+/* We don't want the macro from libspectrum.h */
+#undef libspectrum_calloc
+
+/* Deprecated, removed from header in favour of macro. */
+void* libspectrum_calloc( size_t nmemb, size_t size );
+
 libspectrum_malloc_fn_t libspectrum_malloc_fn = malloc;
 libspectrum_calloc_fn_t libspectrum_calloc_fn = calloc;
 libspectrum_realloc_fn_t libspectrum_realloc_fn = realloc;
@@ -46,14 +52,32 @@ libspectrum_malloc( size_t size )
 }
 
 void*
-libspectrum_calloc( size_t nmemb, size_t size )
+libspectrum_malloc_n( size_t nmemb, size_t size )
 {
-  void *ptr = libspectrum_calloc_fn( nmemb, size );
+  if( nmemb > SIZE_MAX / size ) abort();
+
+  return libspectrum_malloc( nmemb * size );
+}
+
+void*
+libspectrum_malloc0_n( size_t nmemb, size_t size )
+{
+  void *ptr;
+
+  if( nmemb > SIZE_MAX / size ) abort();
+
+  ptr = libspectrum_calloc_fn( nmemb, size );
 
   /* If nmemb * size == 0, acceptable to return NULL */
   if( ( nmemb * size ) && !ptr ) abort();
 
   return ptr;
+}
+
+void*
+libspectrum_calloc( size_t nmemb, size_t size )
+{
+  return libspectrum_malloc0_n( nmemb, size );
 }
 
 void*
@@ -65,6 +89,14 @@ libspectrum_realloc( void *ptr, size_t size )
   if( size && !ptr ) abort();
 
   return ptr;
+}
+
+void*
+libspectrum_realloc_n( void *ptr, size_t nmemb, size_t size )
+{
+  if( nmemb > SIZE_MAX / size ) abort();
+
+  return libspectrum_realloc( ptr, nmemb * size );
 }
 
 void

@@ -964,5 +964,63 @@ hacking/ChangeLog: the small scale changelog for libspectrum
          Lee Tonks) (Fred).
 20140907 accessor.pl,snap_accessors.txt,snapshot.c,szx.c,z80.c: initial ULAplus
          code (part of patch #323) (Sergio).
+20141230 szx.c: guard against passing a NULL pointer to memcpy in
+         write_if1_chunk() (thanks, clang static analyser) (Fred).
+20141230 autogen.sh: select glibtoolize where required (Sergio via fuse).
+20150107 rzx.c: rewrite some conditions for RZX finalisation in a more logical
+         way (thanks, clang static analyser) (Sergio).
+20150107 test/test.c: remove "Function call argument is an uninitialized value"
+         warning. There's no chance that it is, but clang doesn't realise that
+         (Sergio).
+20150225 pzx_read.c,szx.c,tzx_read.c,warajevo_read.c: avoid (undefined) reliance
+         on pointer overflow in buffer length checks (Stuart).
+20150302 internals.h,pzx_read.c,szx.c,test/test.c,zxs.c: add and use ARRAY_SIZE
+         macro (Stuart).
+20150302 libspectrum.h.in: add libspectrum_{new,new0,renew}() macros (Stuart).
+20150302 accessor.pl,creator.c,csw.c,dck.c,ide.c,microdrive.c,pzx_read.c,rzx.c,
+         szx.c,tape.c,tape_block.c,tzx_read.c,tzx_write.c: use libspectrum_new()
+         and libspectrum_renew() macros where sizeof(elem) > 1 (Stuart).
+20150302 libspectrum.in.h: fix ordering of args in libspectrum_new0() (Stuart).
+20150302 z80.c: fix overallocation for uncompressed v2 data blocks (Stuart).
+20150302 bzip2.c,crypto.c,csw.c,dck.c,ide.c,libspectrum.c,microdrive.c,plusd.c,
+         pzx_read.c,rzx.c,sna.c,snapshot.c,sp.c,szx.c,tap.c,test/test.c,
+         tzx_read.c,tzx_write.c,warajevo_read.c,wav.c,z80.c,z80em.c,zlib.c,
+         zxs.c: use libspectrum_{new,new0,renew}() macros where
+         sizeof(elem) == 1 (Stuart).
+20150302 memory.c: check for overflow in libspectrum_calloc() (Stuart).
+20150302 libspectrum.h.in,memory.c: add libspectrum_{m,re}alloc_n() and use this
+         for libspectrum_{new,renew}() macros (Stuart).
+20150302 libspectrum.h.in,memory.c: rename libspectrum_calloc() to
+         libspectrum_malloc0_n() (Stuart).
+20150315 README,configure.ac: remove automatic fallback to GLib replacement (now
+         --with-fake-glib) (Stuart).
+20150315 make-perl.c: add LIBSPECTRUM_HAS_GLIB_REPLACEMENT macro (Stuart).
+20150316 configure.ac: always use -Wwrite-strings when using GCC (Stuart).
+20150316 zlib.c,zxs.c: define ZLIB_CONST when including <zlib.h> and remove cast
+         used as workaround for discarding of const (Stuart).
+20150316 pzx_read.c: add missing const qualifiers and remove casts (Stuart).
+20150316 generate.pl.in,libspectrum.h.in: remove autogeneration warning from
+         libspectrum.h.in (Stuart).
+20150316 doc/libspectrum.txt: add missing line break (Stuart).
+20150316 snapshot.c: store PC-1 for all snapshot formats whilst in the halted
+         state (Stuart).
+20150318 crypto.c,csw.c,internals.h,libspectrum.c,pzx_read.c,rzx.c,szx.c,
+         tzx_read.c: const and static cleanups (Stuart).
+20150418 internals.h: fix compilation on systems without stdint.h (Stuart).
+20150506 libspectrum.h.in: add missing compatibility comments (Stuart).
+20150507 libspectrum.{c,h.in}: add Didaktik disk class and image format (part of
+         patch #331) (Gergely Szasz).
+20150510 Makefile.am,m4/pkg.m4: add pkg.m4 for PKG_CHECK_MODULES in case the
+         platform doesn't have pkg-config installed (Sergio).
+20150512 pzx_read.c,szx.c,tzx_write.c: avoid mixing declarations and code for
+         C89 compilers (Adrien Destugues)
+20150513 internals.h: fix ARRAY_SIZE when using a modern GCC with strict C89
+         syntax (Sergio).
+20150606 doc/libspectrum.txt: sync with snap_accessors.txt (Stuart).
+20150613 m4/ax_create_stdint_h.m4: add AX_CREATE_STDINT_H macro from the GNU
+         Autoconf Archive (Stuart).
+20150617 Makefile.am,test/Makefile.am: enable silent rules for perl and windres
+         commands (Sergio).
+20150831 test/turbo-zeropilot.tzx: add mime-type property (Sergio).
 20151018 accessor.pl,snap_accessors.txt,snapshot.c,szx.c: implement ULAplus
          Timex screen mode support (thanks, Andrew Owen and Fred) (Sergio).

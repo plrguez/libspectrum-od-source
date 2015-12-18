@@ -73,7 +73,7 @@ typedef struct input_block_t {
 
   /* Used for recording to note the last non-repeated frame. We can't
      really use a direct pointer to the frame here as that will move
-     around when we do a realloc on the array, so just dereference it
+     around when we do a renew on the array, so just dereference it
      every time */
   size_t non_repeat;
 
@@ -173,7 +173,7 @@ rzx_write_signed_end( libspectrum_byte **buffer, libspectrum_byte **ptr,
 		      libspectrum_rzx_dsa_key *key );
 
 /* The signature used to identify .rzx files */
-const char *rzx_signature = "RZX!";
+static const char * const rzx_signature = "RZX!";
 
 /* The IN count used to signify 'repeat last frame' */
 const libspectrum_word libspectrum_rzx_repeat_frame = 0xffff;
@@ -185,7 +185,7 @@ const libspectrum_word libspectrum_rzx_repeat_frame = 0xffff;
 static void
 block_alloc( rzx_block_t **block, libspectrum_rzx_block_id type )
 {
-  *block = libspectrum_malloc( sizeof( **block ) );
+  *block = libspectrum_new( rzx_block_t, 1 );
   (*block)->type = type;
 }
 
@@ -260,7 +260,7 @@ find_block( gconstpointer a, gconstpointer b )
 libspectrum_rzx*
 libspectrum_rzx_alloc( void )
 {
-  libspectrum_rzx *rzx = libspectrum_malloc( sizeof( *rzx ) );
+  libspectrum_rzx *rzx = libspectrum_new( libspectrum_rzx, 1 );
   rzx->blocks = NULL;
   rzx->current_block = NULL;
   rzx->current_input = NULL;
@@ -407,7 +407,8 @@ input_block_resize( input_block_t *input, size_t new_count )
     new_allocated = input->allocated >= 25 ? 2 * input->allocated : 50;
     if( new_allocated < new_count ) new_allocated = new_count;
 
-    ptr = libspectrum_realloc( input->frames, new_allocated * sizeof( *ptr ) );
+    ptr = libspectrum_renew( libspectrum_rzx_frame_t, input->frames,
+                             new_allocated );
     if( !ptr ) return LIBSPECTRUM_ERROR_MEMORY;
 
     input->frames = ptr;
@@ -467,7 +468,7 @@ libspectrum_rzx_store_frame( libspectrum_rzx *rzx, size_t instructions,
 
     if( count ) {
 
-      frame->in_bytes = libspectrum_malloc( count * sizeof( *( frame->in_bytes ) ) );
+      frame->in_bytes = libspectrum_new( libspectrum_byte, count );
 
       memcpy( frame->in_bytes, in_bytes,
 	      count * sizeof( *( frame->in_bytes ) ) );
@@ -1009,7 +1010,7 @@ rzx_read_input( libspectrum_rzx *rzx,
   (*ptr)++;
 
   /* Allocate memory for the frames */
-  block->frames = libspectrum_malloc( block->count * sizeof( *block->frames ) );
+  block->frames = libspectrum_new( libspectrum_rzx_frame_t, block->count );
   block->allocated = block->count;
 
   /* Fetch the T-state counter and the flags */
@@ -1112,7 +1113,7 @@ rzx_read_frames( input_block_t *block, const libspectrum_byte **ptr,
     if( block->frames[i].count ) {
 
       block->frames[i].in_bytes =
-	libspectrum_malloc( block->frames[i].count * sizeof( libspectrum_byte ) );
+	libspectrum_new( libspectrum_byte, block->frames[i].count );
       memcpy( block->frames[i].in_bytes, *ptr, block->frames[i].count );
 
     } else {
@@ -1781,9 +1782,11 @@ libspectrum_rzx_finalise( libspectrum_rzx *rzx )
     if( block->type == LIBSPECTRUM_RZX_INPUT_BLOCK ) {
 
       next_item = list->next;
-      next_block = ( next_item )? next_item->data : NULL;
+      if( !next_item ) break;
 
-      if( next_block && next_block->type == LIBSPECTRUM_RZX_INPUT_BLOCK ) {
+      next_block = next_item->data;
+
+      if( next_block->type == LIBSPECTRUM_RZX_INPUT_BLOCK ) {
         error = input_block_merge( &( block->types.input ),
                                    &( next_block->types.input ) );
         if( error ) return error;

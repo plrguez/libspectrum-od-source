@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "internals.h"
 #include "test.h"
 
 const char *progname;
@@ -38,7 +39,7 @@ read_file( libspectrum_byte **buffer, size_t *length, const char *filename )
   }
 
   *length = info.st_size;
-  *buffer = libspectrum_malloc( *length );
+  *buffer = libspectrum_new( libspectrum_byte, *length );
 
   bytes = read( fd, *buffer, *length );
   if( bytes == -1 ) {
@@ -497,8 +498,8 @@ static test_return_t
 test_24( void )
 {
   const char *filename = DYNAMIC_TEST_PATH( "complete-tzx.tzx" );
-  libspectrum_byte *buffer;
-  size_t filesize;
+  libspectrum_byte *buffer = NULL;
+  size_t filesize = 0;
   libspectrum_tape *tape;
   libspectrum_tape_iterator it;
   libspectrum_tape_block *block;
@@ -770,7 +771,7 @@ static struct test_description tests[] = {
   { test_27, "Reading old SZX file", 0 },
 };
 
-static size_t test_count = sizeof( tests ) / sizeof( tests[0] );
+static size_t test_count = ARRAY_SIZE( tests );
 
 static void
 parse_test_specs( char **specs, int count )

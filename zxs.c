@@ -28,6 +28,7 @@
 #include <string.h>
 
 #ifdef HAVE_ZLIB_H
+#define ZLIB_CONST
 #include <zlib.h>
 #endif				/* #ifdef HAVE_ZLIB_H */
 
@@ -70,8 +71,7 @@ inflate_block( libspectrum_byte **uncompressed, size_t *uncompressed_length,
   *uncompressed_length = libspectrum_read_dword( compressed );
 
   /* Some space to put the zlib header for decompression */
-  zlib_buffer =
-    libspectrum_malloc( ( compressed_length + 6 ) * sizeof( *zlib_buffer ) );
+  zlib_buffer = libspectrum_new( libspectrum_byte, ( compressed_length + 6 ) );
 
   /* zlib's header */
   zlib_buffer[0] = 0x78; zlib_buffer[1] = 0xda;
@@ -79,7 +79,7 @@ inflate_block( libspectrum_byte **uncompressed, size_t *uncompressed_length,
   memcpy( &zlib_buffer[2], *compressed, compressed_length );
   *compressed += compressed_length;
 
-  *uncompressed = libspectrum_malloc( *uncompressed_length * sizeof( **uncompressed ) );
+  *uncompressed = libspectrum_new( libspectrum_byte, *uncompressed_length );
 
   actual_length = *uncompressed_length;
   error = uncompress( *uncompressed, &actual_length, zlib_buffer,
@@ -378,7 +378,7 @@ read_ram_chunk( libspectrum_snap *snap, int *compression,
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
-    buffer2 = libspectrum_malloc( 0x4000 * sizeof( *buffer2 ) );
+    buffer2 = libspectrum_new( libspectrum_byte, 0x4000 );
     memcpy( buffer2, buffer, 0x4000 ); *buffer += 0x4000;
   }
 
@@ -427,9 +427,6 @@ static struct read_chunk_t read_chunks[] = {
 
 };
 
-static size_t read_chunks_count =
-  sizeof( read_chunks ) / sizeof( struct read_chunk_t );
-
 static libspectrum_error
 read_chunk_header( char *id, libspectrum_dword *data_length, 
 		   const libspectrum_byte **buffer,
@@ -472,7 +469,7 @@ read_chunk( libspectrum_snap *snap, const libspectrum_byte **buffer,
 
   done = 0;
 
-  for( i = 0; !done && i < read_chunks_count; i++ ) {
+  for( i = 0; !done && i < ARRAY_SIZE( read_chunks ); i++ ) {
 
     if( !strcmp( id, read_chunks[i].id ) ) {
       error = read_chunks[i].function( snap, &compression, buffer, end,

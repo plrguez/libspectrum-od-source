@@ -780,8 +780,9 @@ write_pulse( libspectrum_dword pulse_length )
 
   if( rle_state.tape_length <= target_size ) {
     rle_state.tape_length = target_size * 2;
-    rle_state.tape_buffer = libspectrum_realloc( rle_state.tape_buffer,
-                                                 rle_state.tape_length );
+    rle_state.tape_buffer = libspectrum_renew( libspectrum_byte,
+					       rle_state.tape_buffer,
+					       rle_state.tape_length );
   }
 
   for( i = pulse_length; i > 0; i-- ) {
@@ -824,7 +825,7 @@ tzx_write_rle( libspectrum_tape_block *block, libspectrum_byte **buffer,
   rle_state.level = 0;
   rle_state.length = 0;
   rle_state.tape_length = 8192;
-  rle_state.tape_buffer = libspectrum_malloc( rle_state.tape_length );
+  rle_state.tape_buffer = libspectrum_new( libspectrum_byte, rle_state.tape_length );
 
   *rle_state.tape_buffer = 0;
 
@@ -947,7 +948,7 @@ tzx_write_pulse_sequence( libspectrum_tape_block *block,
       if( uncommitted_pulse_count == max_pulse_count ) {
         max_pulse_count = uncommitted_pulse_count + 64;
         lengths =
-          libspectrum_realloc( lengths, max_pulse_count * sizeof( *lengths ) );
+          libspectrum_renew( libspectrum_dword, lengths, max_pulse_count );
       }
       /* Queue up pulse */
       lengths[uncommitted_pulse_count++] =
@@ -970,6 +971,7 @@ tzx_write_data_block( libspectrum_tape_block *block, libspectrum_byte **buffer,
 {
   libspectrum_tape_block *pure_data;
   size_t data_length;
+  libspectrum_byte *data;
 
   /* Pure data block can only have two identical pulses for bit 0 and bit 1 */
   if( libspectrum_tape_block_bit0_pulse_count( block ) != 2 ||
@@ -998,7 +1000,7 @@ tzx_write_data_block( libspectrum_tape_block *block, libspectrum_byte **buffer,
   /* And the actual data */
   data_length = libspectrum_tape_block_data_length( block );
   libspectrum_tape_block_set_data_length( pure_data, data_length );
-  libspectrum_byte *data = libspectrum_malloc( data_length * sizeof( *data ) );
+  data = libspectrum_new( libspectrum_byte, data_length );
   memcpy( data, libspectrum_tape_block_data( block ), data_length );
   libspectrum_tape_block_set_data( pure_data, data );
 

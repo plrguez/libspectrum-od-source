@@ -195,7 +195,7 @@ libspectrum_ide_alloc( libspectrum_ide_databus databus )
 {
   libspectrum_ide_channel *channel;
 
-  channel = libspectrum_malloc( sizeof( *channel ) );
+  channel = libspectrum_new( libspectrum_ide_channel, 1 );
 
   channel->databus = databus;
   channel->drive[ LIBSPECTRUM_IDE_MASTER ].disk = NULL;
@@ -503,8 +503,8 @@ write_hdf( libspectrum_ide_channel *chn )
 
     gint *key;
 
-    key = libspectrum_malloc( sizeof( *key ) );
-    buffer = libspectrum_malloc( drv->sector_size * sizeof( *buffer ) );
+    key = libspectrum_new( gint, 1 );
+    buffer = libspectrum_new( libspectrum_byte, drv->sector_size );
 
     *key = chn->sector_number;
     g_hash_table_insert( cache, key, buffer );

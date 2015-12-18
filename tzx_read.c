@@ -33,7 +33,7 @@
 #include "internals.h"
 
 /* The .tzx file signature (first 8 bytes) */
-const char *libspectrum_tzx_signature = "ZXTape!\x1a";
+const char * const libspectrum_tzx_signature = "ZXTape!\x1a";
 
 /*** Local function prototypes ***/
 
@@ -406,7 +406,7 @@ tzx_read_pulses_block( libspectrum_tape *tape, const libspectrum_byte **ptr,
     return LIBSPECTRUM_ERROR_CORRUPT;
   }
 
-  lengths = libspectrum_malloc( count * sizeof( *lengths ) );
+  lengths = libspectrum_new( libspectrum_dword, count );
 
   /* Copy the data across */
   for( i = 0; i < count; i++ ) {
@@ -571,8 +571,8 @@ tzx_read_generalised_data( libspectrum_tape *tape,
     return LIBSPECTRUM_ERROR_CORRUPT;
   }
 
-  symbols = libspectrum_malloc( symbol_count * sizeof( *symbols ) );
-  repeats = libspectrum_malloc( symbol_count * sizeof( *repeats ) );
+  symbols = libspectrum_new( libspectrum_byte, symbol_count );
+  repeats = libspectrum_new( libspectrum_word, symbol_count );
 
   for( i = 0; i < symbol_count; i++ ) {
     symbols[ i ] = **ptr; (*ptr)++;
@@ -602,9 +602,9 @@ tzx_read_generalised_data( libspectrum_tape *tape,
   data_count = ( ( bits_per_symbol * symbol_count ) + 7 ) / 8;
   data_size = data_count * sizeof( *data );
 
-  data = libspectrum_malloc( data_size );
+  data = libspectrum_new( libspectrum_byte, data_size );
 
-  if( *ptr + data_size > end || *ptr + data_size < *ptr ) {
+  if( end - (*ptr) < data_size ) {
     libspectrum_free( data );
     libspectrum_tape_block_free( block );
     libspectrum_print_error( LIBSPECTRUM_ERROR_CORRUPT,
@@ -772,10 +772,10 @@ tzx_read_select( libspectrum_tape *tape, const libspectrum_byte **ptr,
   libspectrum_tape_block_set_count( block, count );
 
   /* Allocate memory */
-  offsets = libspectrum_malloc( count * sizeof( *offsets ) );
+  offsets = libspectrum_new( int, count );
   libspectrum_tape_block_set_offsets( block, offsets );
 
-  descriptions = libspectrum_malloc( count * sizeof( *descriptions ) );
+  descriptions = libspectrum_new( char *, count );
   libspectrum_tape_block_set_texts( block, descriptions );
 
   /* Read in the data */
@@ -945,10 +945,10 @@ tzx_read_archive_info( libspectrum_tape *tape, const libspectrum_byte **ptr,
   libspectrum_tape_block_set_count( block, count );
 
   /* Allocate memory */
-  ids = libspectrum_malloc( count * sizeof( *ids ) );
+  ids = libspectrum_new( int, count );
   libspectrum_tape_block_set_ids( block, ids );
 
-  strings = libspectrum_malloc( count * sizeof( *strings ) );
+  strings = libspectrum_new( char *, count );
   libspectrum_tape_block_set_texts( block, strings );
 
   for( i = 0; i < count; i++ ) {
@@ -1014,13 +1014,13 @@ tzx_read_hardware( libspectrum_tape *tape, const libspectrum_byte **ptr,
   }
 
   /* Allocate memory */
-  types = libspectrum_malloc( count * sizeof( *types ) );
+  types = libspectrum_new( int, count );
   libspectrum_tape_block_set_types( block, types );
 
-  ids = libspectrum_malloc( count * sizeof( *ids ) );
+  ids = libspectrum_new( int, count );
   libspectrum_tape_block_set_ids( block, ids );
 
-  values = libspectrum_malloc( count * sizeof( *values ) );
+  values = libspectrum_new( int, count );
   libspectrum_tape_block_set_values( block, values );
 
   /* Actually read in all the data */
@@ -1054,7 +1054,7 @@ tzx_read_custom( libspectrum_tape *tape, const libspectrum_byte **ptr,
   block = libspectrum_tape_block_alloc( LIBSPECTRUM_TAPE_BLOCK_CUSTOM );
 
   /* Get the description */
-  description = libspectrum_malloc( 17 * sizeof( libspectrum_byte ) );
+  description = libspectrum_new( char, 17 );
   memcpy( description, *ptr, 16 ); (*ptr) += 16; description[16] = '\0';
   libspectrum_tape_block_set_text( block, description );
 
@@ -1124,9 +1124,9 @@ tzx_read_data( const libspectrum_byte **ptr, const libspectrum_byte *end,
   }
 
   /* Allocate memory for the data; the check for *length is to avoid
-     the implementation-defined of malloc( 0 ) */
+     the implementation-defined behaviour of malloc( 0 ) */
   if( *length || padding ) {
-    *data = libspectrum_malloc( ( *length + padding ) * sizeof( **data ) );
+    *data = libspectrum_new( libspectrum_byte, *length + padding );
     /* Copy the block data across, and move along */
     memcpy( *data, *ptr, *length ); *ptr += *length;
   } else {

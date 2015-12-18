@@ -61,12 +61,12 @@ typedef enum szx_machine_type {
 
 } szx_machine_type;
 
-static const char *signature = "ZXST";
+static const char * const signature = "ZXST";
 static const size_t signature_length = 4;
 
 static const libspectrum_byte ZXSTMF_ALTERNATETIMINGS = 1;
 
-static const char *libspectrum_string = "libspectrum: ";
+static const char * const libspectrum_string = "libspectrum: ";
 
 static const libspectrum_byte SZX_VERSION_MAJOR = 1;
 static const libspectrum_byte SZX_VERSION_MINOR = 5;
@@ -402,7 +402,7 @@ read_ram_page( libspectrum_byte **data, size_t *page,
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
-    *data = libspectrum_malloc( uncompressed_length * sizeof( **data ) );
+    *data = libspectrum_new( libspectrum_byte, uncompressed_length );
     memcpy( *data, *buffer, uncompressed_length );
     *buffer += uncompressed_length;
 
@@ -549,7 +549,7 @@ read_b128_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 	return LIBSPECTRUM_ERROR_UNKNOWN;
       }
 
-      rom_data = libspectrum_malloc( expected_length );
+      rom_data = libspectrum_new( libspectrum_byte, expected_length );
       memcpy( rom_data, *buffer, expected_length );
 
     }
@@ -582,11 +582,13 @@ read_crtr_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 
   /* This is ugly, but I can't see a better way to do it */
   if( sizeof( libspectrum_byte ) == sizeof( char ) ) {
-    char *custom = libspectrum_malloc( data_length + 1 );
+    char *custom = libspectrum_new( char, data_length + 1 );
+    char *libspectrum;
+
     memcpy( custom, *buffer, data_length );
     custom[data_length] = 0;
 
-    char *libspectrum = strstr( custom, libspectrum_string );
+    libspectrum = strstr( custom, libspectrum_string );
     if( libspectrum ) {
       int matches, v1, v2, v3;
       libspectrum += strlen( libspectrum_string );
@@ -781,13 +783,13 @@ read_opus_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 
     expected_length = 0x800;
 
-    ram_data = libspectrum_malloc( expected_length );
+    ram_data = libspectrum_new( libspectrum_byte, expected_length );
     memcpy( ram_data, *buffer, expected_length );
     *buffer += expected_length;
 
     if( libspectrum_snap_opus_custom_rom( snap ) ) {
       expected_length = 0x2000;
-      rom_data = libspectrum_malloc( expected_length );
+      rom_data = libspectrum_new( libspectrum_byte, expected_length );
       memcpy( rom_data, *buffer, expected_length );
       *buffer += expected_length;
     }
@@ -964,12 +966,12 @@ read_plsd_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
-    ram_data = libspectrum_malloc( expected_length );
+    ram_data = libspectrum_new( libspectrum_byte, expected_length );
     memcpy( ram_data, *buffer, expected_length );
     *buffer += expected_length;
 
     if( libspectrum_snap_plusd_custom_rom( snap ) ) {
-      rom_data = libspectrum_malloc( expected_length );
+      rom_data = libspectrum_new( libspectrum_byte, expected_length );
       memcpy( rom_data, *buffer, expected_length );
       *buffer += expected_length;
     }
@@ -1562,7 +1564,7 @@ read_if1_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
         return LIBSPECTRUM_ERROR_UNKNOWN;
       }
 
-      rom_data = libspectrum_malloc( expected_length );
+      rom_data = libspectrum_new( libspectrum_byte, expected_length );
       memcpy( rom_data, *buffer, expected_length );
 
       libspectrum_snap_set_interface1_rom_length( snap, 0, expected_length );
@@ -1580,7 +1582,7 @@ szx_set_custom_rom( libspectrum_snap *snap, int page_no,
                     libspectrum_byte *rom_data, libspectrum_word length )
 {
   if( length ) {
-    libspectrum_byte *page = libspectrum_malloc( length );
+    libspectrum_byte *page = libspectrum_new( libspectrum_byte, length );
     memcpy( page, rom_data, length );
 
     libspectrum_snap_set_roms( snap, page_no, page );
@@ -1689,7 +1691,7 @@ read_rom_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
-    rom_data = libspectrum_malloc( expected_length );
+    rom_data = libspectrum_new( libspectrum_byte, expected_length );
     memcpy( rom_data, *buffer, expected_length );
     *buffer += expected_length;
   }
@@ -1928,7 +1930,7 @@ read_dide_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
-    eprom_data = libspectrum_malloc( expected_length );
+    eprom_data = libspectrum_new( libspectrum_byte, expected_length );
     memcpy( eprom_data, *buffer, expected_length );
 
     *buffer += expected_length;
@@ -2035,7 +2037,7 @@ read_snet_memory( libspectrum_snap *snap, const libspectrum_byte **buffer,
     *buffer += data_length;
   }
 
-  data_out = libspectrum_malloc( 0x20000 );
+  data_out = libspectrum_new( libspectrum_byte, 0x20000 );
   memcpy( data_out, data, 0x20000 );
   setter( snap, 0, data_out );
 
@@ -2079,7 +2081,7 @@ read_snet_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
   libspectrum_snap_set_spectranet_programmable_trap( snap,
     libspectrum_read_word( buffer ) );
 
-  w5100 = libspectrum_malloc( 0x30 * sizeof( libspectrum_byte ) );
+  w5100 = libspectrum_new( libspectrum_byte, 0x30 );
   libspectrum_snap_set_spectranet_w5100( snap, 0, w5100 );
   memcpy( w5100, *buffer, 0x30 );
   (*buffer) += 0x30;
@@ -2255,9 +2257,6 @@ static struct read_chunk_t read_chunks[] = {
 
 };
 
-static size_t read_chunks_count =
-  sizeof( read_chunks ) / sizeof( struct read_chunk_t );
-
 static libspectrum_error
 read_chunk_header( char *id, libspectrum_dword *data_length, 
 		   const libspectrum_byte **buffer,
@@ -2290,7 +2289,7 @@ read_chunk( libspectrum_snap *snap, libspectrum_word version,
   error = read_chunk_header( id, &data_length, buffer, end );
   if( error ) return error;
 
-  if( *buffer + data_length > end || *buffer + data_length < *buffer ) {
+  if( end - *buffer < data_length ) {
     libspectrum_print_error(
       LIBSPECTRUM_ERROR_CORRUPT,
       "szx_read_chunk: chunk length goes beyond end of file"
@@ -2300,7 +2299,7 @@ read_chunk( libspectrum_snap *snap, libspectrum_word version,
 
   done = 0;
 
-  for( i = 0; !done && i < read_chunks_count; i++ ) {
+  for( i = 0; !done && i < ARRAY_SIZE( read_chunks ); i++ ) {
 
     if( !memcmp( id, read_chunks[i].id, 4 ) ) {
       error = read_chunks[i].function( snap, version, buffer, end,
@@ -2446,7 +2445,7 @@ libspectrum_szx_read( libspectrum_snap *snap, const libspectrum_byte *buffer,
     break;
   }
 
-  ctx = libspectrum_malloc( sizeof( *ctx ) );
+  ctx = libspectrum_new( szx_context, 1 );
   ctx->swap_af = 0;
 
   while( buffer < end ) {
@@ -3011,7 +3010,7 @@ write_rom_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr, size_t *leng
 
   uncompressed_data_length = data_length;
 
-  data = libspectrum_malloc( data_length );
+  data = libspectrum_new( libspectrum_byte, data_length );
   rom_base = data;
 
   /* Copy the rom data into a single block ready for putting in the szx */
@@ -3333,6 +3332,15 @@ write_if1_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
       return LIBSPECTRUM_ERROR_LOGIC;
     }
     rom_data = libspectrum_snap_interface1_rom( snap, 0 );
+    if( rom_data == NULL ) {
+      libspectrum_print_error( LIBSPECTRUM_ERROR_LOGIC,
+                              "Interface 1 custom ROM specified to be %lu "
+                              "bytes but NULL pointer provided",
+                              (unsigned long)
+                              libspectrum_snap_interface1_rom_length(
+                                 snap, 0 ) );
+      return LIBSPECTRUM_ERROR_LOGIC;
+    }
     uncompressed_rom_length = disk_rom_length =
       libspectrum_snap_interface1_rom_length( snap, 0 );
   }
