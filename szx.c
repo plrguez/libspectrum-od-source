@@ -1,5 +1,5 @@
 /* szx.c: Routines for .szx snapshots
-   Copyright (c) 1998-2012 Philip Kendall, Fredrick Meunier, Stuart Brady
+   Copyright (c) 1998-2016 Philip Kendall, Fredrick Meunier, Stuart Brady
 
    $Id$
 
@@ -711,6 +711,8 @@ read_opus_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
     *buffer += disc_ram_length;
 
     if( libspectrum_snap_opus_custom_rom( snap ) ) {
+      uncompressed_length = 0;
+
       error = libspectrum_zlib_inflate( *buffer, disc_rom_length, &rom_data,
                                         &uncompressed_length );
       if( error ) return error;
@@ -719,7 +721,7 @@ read_opus_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 
       if( uncompressed_length != expected_length ) {
         libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
-                                 "%s:read_plsd_chunk: invalid ROM length "
+                                 "%s:read_opus_chunk: invalid ROM length "
                                  "in compressed file, should be %lu, file "
                                  "has %lu",
                                  __FILE__, 
@@ -900,6 +902,8 @@ read_plsd_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
     *buffer += disc_ram_length;
 
     if( libspectrum_snap_plusd_custom_rom( snap ) ) {
+      uncompressed_length = 0;
+
       error = libspectrum_zlib_inflate( *buffer, disc_rom_length, &rom_data,
                                         &uncompressed_length );
       if( error ) return error;
@@ -2472,6 +2476,18 @@ libspectrum_szx_write( libspectrum_byte **buffer, size_t *length,
 
   *out_flags = 0;
 
+  /* We don't save the uSource state at all */
+  if( libspectrum_snap_usource_active( snap ) )
+    *out_flags |= LIBSPECTRUM_FLAG_SNAPSHOT_MAJOR_INFO_LOSS;
+
+  /* We don't save the DISCiPLE state at all */
+  if( libspectrum_snap_disciple_active( snap ) )
+    *out_flags |= LIBSPECTRUM_FLAG_SNAPSHOT_MAJOR_INFO_LOSS;
+
+  /* We don't save the Didaktik80 state at all */
+  if( libspectrum_snap_didaktik80_active( snap ) )
+    *out_flags |= LIBSPECTRUM_FLAG_SNAPSHOT_MAJOR_INFO_LOSS;
+
   capabilities =
     libspectrum_machine_capabilities( libspectrum_snap_machine( snap ) );
 
@@ -2501,7 +2517,6 @@ libspectrum_szx_write( libspectrum_byte **buffer, size_t *length,
     error = write_rom_chunk( buffer, &ptr, length, out_flags, snap, compress );
     if( error ) return error;
   }
-
 
   error = write_ram_pages( buffer, &ptr, length, snap, compress );
   if( error ) return error;
@@ -3455,9 +3470,9 @@ write_opus_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 
   write_chunk_header( buffer, ptr, length, ZXSTBID_OPUS, block_size );
 
-  if( libspectrum_snap_opus_paged( snap ) ) flags |= ZXSTPLUSDF_PAGED;
-  if( use_compression ) flags |= ZXSTPLUSDF_COMPRESSED;
-  if( !libspectrum_snap_opus_direction( snap ) ) flags |= ZXSTPLUSDF_SEEKLOWER;
+  if( libspectrum_snap_opus_paged( snap ) ) flags |= ZXSTOPUSF_PAGED;
+  if( use_compression ) flags |= ZXSTOPUSF_COMPRESSED;
+  if( !libspectrum_snap_opus_direction( snap ) ) flags |= ZXSTOPUSF_SEEKLOWER;
   if( libspectrum_snap_opus_custom_rom( snap ) ) flags |= ZXSTOPUSF_CUSTOMROM;
   libspectrum_write_dword( ptr, flags );
 

@@ -1,5 +1,5 @@
 ## Process this file with automake to produce Makefile.in
-## Copyright (c) 2001-2013 Philip Kendall
+## Copyright (c) 2001-2016 Philip Kendall
 
 ## $Id$
 
@@ -63,7 +63,7 @@ libspectrum_la_SOURCES = bzip2.c \
 			 zlib.c \
 			 zxs.c
 
-libspectrum_la_LDFLAGS = -version-info 9:0:1 -no-undefined @WINDRES_LDFLAGS@
+libspectrum_la_LDFLAGS = -version-info 10:0:2 -no-undefined @WINDRES_LDFLAGS@
 
 libspectrum_la_LIBADD = @AUDIOFILE_LIBS@ @GLIB_LIBS@ -lm
 
@@ -80,7 +80,7 @@ noinst_DATA =
 AM_CFLAGS = -DLIBSPECTRUM_EXPORTS
 
 make-perl$(EXEEXT): $(srcdir)/make-perl.c config.h
-	$(AM_V_CC)$(CC_FOR_BUILD) -I. $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $<
+	$(AM_V_CC)$(CC_FOR_BUILD) -I. -o $@ $<
 
 libspectrum.h: libspectrum.h.in generate.pl snap_accessors.txt tape_accessors.txt config.h
 	$(AM_V_GEN)$(PERL) -p generate.pl $(srcdir) $(srcdir)/libspectrum.h.in > $@.tmp && mv $@.tmp $@
@@ -107,6 +107,7 @@ EXTRA_DIST = accessor.pl \
 	     dll.c \
 	     generate.pl.in \
 	     m4/audiofile.m4 \
+	     m4/ax_create_stdint_h.m4 \
 	     m4/pkg.m4 \
 	     make-perl.c \
 	     tape_accessors.pl \

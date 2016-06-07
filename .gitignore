@@ -1,5 +1,5 @@
-/*.lo
 /*.dSYM
+/*.lo
 /.deps
 /.libs
 /Makefile
@@ -31,5 +31,6 @@
 /stamp-h
 /stamp-h.in
 /stamp-h1
+/tags
 /tape_accessors.c
 /tape_set.c

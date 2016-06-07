@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 # accessor.pl: generate accessor functions
-# Copyright (c) 2003-2009 Philip Kendall
+# Copyright (c) 2003-2016 Philip Kendall
 
 # $Id$
 
@@ -240,6 +240,44 @@ struct libspectrum_snap {
 
   /* Printer emulation */
   int zx_printer_active;
+
+  /* uSource emulation */
+  int usource_active;
+  int usource_paged;
+  int usource_custom_rom;
+  libspectrum_byte* usource_rom[1];
+  size_t usource_rom_length[1];	/* Length of the ROM */
+
+  /* DISCiPLE emulation */
+  int disciple_active;
+  int disciple_paged;
+  int disciple_inhibit_button;
+  int disciple_drive_count;
+  int disciple_custom_rom;
+  int disciple_direction;
+  libspectrum_byte disciple_control;
+  libspectrum_byte disciple_track;
+  libspectrum_byte disciple_sector;
+  libspectrum_byte disciple_data;
+  libspectrum_byte disciple_status;
+  libspectrum_byte* disciple_rom[1];
+  size_t disciple_rom_length[1];
+  libspectrum_byte* disciple_ram[1];
+
+  /* Didaktik 80 MDOS 1 emulation */
+  int didaktik80_active;
+  int didaktik80_paged;
+  int didaktik80_drive_count;
+  int didaktik80_custom_rom;
+  int didaktik80_direction;
+  libspectrum_byte didaktik80_aux;
+  libspectrum_byte didaktik80_track;
+  libspectrum_byte didaktik80_sector;
+  libspectrum_byte didaktik80_data;
+  libspectrum_byte didaktik80_status;
+  libspectrum_byte* didaktik80_rom[1];
+  size_t didaktik80_rom_length[1];
+  libspectrum_byte* didaktik80_ram[1];
   
   /* ULAplus emulation */
   int ulaplus_active;
