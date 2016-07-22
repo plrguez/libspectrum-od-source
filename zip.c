@@ -42,7 +42,7 @@ enum {
 };
 
 /* Seek safely within ZIP archive */
-int
+static int
 seek( struct libspectrum_zip *z, long offset, int whence )
 {
   const libspectrum_byte *ptr;
@@ -73,7 +73,7 @@ seek( struct libspectrum_zip *z, long offset, int whence )
   return 0;
 }
 
-int
+static int
 read_directory_info( zip_directory_info *info, const libspectrum_byte *buffer,
                      const libspectrum_byte *end )
 {
@@ -93,7 +93,7 @@ read_directory_info( zip_directory_info *info, const libspectrum_byte *buffer,
   return ZIP_DIRECTORY_INFO_SIZE;
 }
 
-int
+static int
 read_file_header( zip_file_header *file_info, const libspectrum_byte *buffer,
                   const libspectrum_byte *end )
 {
@@ -122,7 +122,7 @@ read_file_header( zip_file_header *file_info, const libspectrum_byte *buffer,
   return ZIP_FILE_HEADER_SIZE;
 }
 
-int
+static int
 read_local_header( zip_local_header *local_info,
                    const libspectrum_byte *buffer,
                    const libspectrum_byte *end )
@@ -146,7 +146,7 @@ read_local_header( zip_local_header *local_info,
   return ZIP_LOCAL_HEADER_SIZE;
 }
 
-int
+static int
 match_file_names( const char *a, const char *b, const int ignore_case )
 {
   if( !a || !b ) return 0;
@@ -167,7 +167,7 @@ close_zip( struct libspectrum_zip *z )
 }
 
 /* Locate the ZIP central directory info */
-int
+static int
 locate_directory_info( struct libspectrum_zip *z, zip_directory_info *info )
 {
   if( seek( z, -ZIP_DIRECTORY_INFO_SIZE, SEEK_END ) ) {
@@ -194,7 +194,7 @@ locate_directory_info( struct libspectrum_zip *z, zip_directory_info *info )
 }
 
 /* Locate the ZIP central directory */
-int
+static int
 locate_directory( struct libspectrum_zip *z )
 {
   if( z->directory_offset != 0 ) {
@@ -241,7 +241,7 @@ libspectrum_zip_rewind( struct libspectrum_zip *z )
 }
 
 /* Read next entry in the ZIP central directory */
-int
+static int
 read_directory( struct libspectrum_zip *z )
 {
   int retry, retval;
@@ -332,7 +332,7 @@ libspectrum_zip_open( const libspectrum_byte *buffer, size_t length )
   return z;
 }
 
-void
+static void
 dump_entry_stat( struct libspectrum_zip *z, zip_stat *info )
 {
   char *slash;
@@ -428,7 +428,7 @@ libspectrum_zip_close( struct libspectrum_zip *z )
 }
 
 /* Prepare stream for reading from ZIP archive */
-int
+static int
 prepare_stream( struct libspectrum_zip *z )
 {
   zip_local_header header;
@@ -474,7 +474,7 @@ prepare_stream( struct libspectrum_zip *z )
 }
 
 /* Decompress the zlib compressed data */
-int
+static int
 decompress_stream( struct libspectrum_zip *z, libspectrum_byte **buffer,
                    size_t *buffer_size )
 {
