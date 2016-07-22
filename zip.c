@@ -41,34 +41,6 @@ enum {
   ARCHIVE_OPEN
 };
 
-void
-read4( libspectrum_byte *out, const libspectrum_byte **in )
-{
-#ifdef WORDS_BIGENDIAN
-  *out++ = (*in)[3];
-  *out++ = (*in)[2];
-  *out++ = (*in)[1];
-  *out++ = (*in)[0];
-#else
-  memcpy( out, *in, 4 );
-#endif
-
-  (*in) += 4;
-}
-
-void
-read2( libspectrum_byte *out, const libspectrum_byte **in )
-{
-#ifdef WORDS_BIGENDIAN
-  *out++ = (*in)[1];
-  *out++ = (*in)[0];
-#else
-  memcpy( out, *in, 2 );
-#endif
-
-  (*in) += 2;
-}
-
 /* Seek safely within ZIP archive */
 int
 seek( struct libspectrum_zip *z, long offset, int whence )
@@ -109,14 +81,14 @@ read_directory_info( zip_directory_info *info, const libspectrum_byte *buffer,
     return 0;
   }
 
-  read4( (libspectrum_byte *)&info->magic, &buffer );
-  read2( (libspectrum_byte *)&info->disk_index, &buffer );
-  read2( (libspectrum_byte *)&info->directory_disk_index, &buffer );
-  read2( (libspectrum_byte *)&info->disk_file_count, &buffer );
-  read2( (libspectrum_byte *)&info->file_count, &buffer );
-  read4( (libspectrum_byte *)&info->directory_size, &buffer );
-  read4( (libspectrum_byte *)&info->directory_offset, &buffer );
-  read2( (libspectrum_byte *)&info->comment_size, &buffer );
+  info->magic                = libspectrum_read_dword( &buffer );
+  info->disk_index           = libspectrum_read_word( &buffer );
+  info->directory_disk_index = libspectrum_read_word( &buffer );
+  info->disk_file_count      = libspectrum_read_word( &buffer );
+  info->file_count           = libspectrum_read_word( &buffer );
+  info->directory_size       = libspectrum_read_dword( &buffer );
+  info->directory_offset     = libspectrum_read_dword( &buffer );
+  info->comment_size         = libspectrum_read_word( &buffer );
 
   return ZIP_DIRECTORY_INFO_SIZE;
 }
@@ -129,23 +101,23 @@ read_file_header( zip_file_header *file_info, const libspectrum_byte *buffer,
     return 0;
   }
 
-  read4( (libspectrum_byte *)&file_info->magic, &buffer );
-  read2( (libspectrum_byte *)&file_info->creator_version, &buffer );
-  read2( (libspectrum_byte *)&file_info->required_version, &buffer );
-  read2( (libspectrum_byte *)&file_info->flags, &buffer );
-  read2( (libspectrum_byte *)&file_info->compression, &buffer );
-  read2( (libspectrum_byte *)&file_info->mod_time, &buffer );
-  read2( (libspectrum_byte *)&file_info->mod_date, &buffer );
-  read4( (libspectrum_byte *)&file_info->crc, &buffer );
-  read4( (libspectrum_byte *)&file_info->compressed_size, &buffer );
-  read4( (libspectrum_byte *)&file_info->uncompressed_size, &buffer );
-  read2( (libspectrum_byte *)&file_info->name_size, &buffer );
-  read2( (libspectrum_byte *)&file_info->extra_field_size, &buffer );
-  read2( (libspectrum_byte *)&file_info->comment_size, &buffer );
-  read2( (libspectrum_byte *)&file_info->disk_index, &buffer );
-  read2( (libspectrum_byte *)&file_info->internal_flags, &buffer );
-  read4( (libspectrum_byte *)&file_info->external_flags, &buffer );
-  read4( (libspectrum_byte *)&file_info->file_offset, &buffer );
+  file_info->magic             = libspectrum_read_dword( &buffer );
+  file_info->creator_version   = libspectrum_read_word( &buffer );
+  file_info->required_version  = libspectrum_read_word( &buffer );
+  file_info->flags             = libspectrum_read_word( &buffer );
+  file_info->compression       = libspectrum_read_word( &buffer );
+  file_info->mod_time          = libspectrum_read_word( &buffer );
+  file_info->mod_date          = libspectrum_read_word( &buffer );
+  file_info->crc               = libspectrum_read_dword( &buffer );
+  file_info->compressed_size   = libspectrum_read_dword( &buffer );
+  file_info->uncompressed_size = libspectrum_read_dword( &buffer );
+  file_info->name_size         = libspectrum_read_word( &buffer );
+  file_info->extra_field_size  = libspectrum_read_word( &buffer );
+  file_info->comment_size      = libspectrum_read_word( &buffer );
+  file_info->disk_index        = libspectrum_read_word( &buffer );
+  file_info->internal_flags    = libspectrum_read_word( &buffer );
+  file_info->external_flags    = libspectrum_read_dword( &buffer );
+  file_info->file_offset       = libspectrum_read_dword( &buffer );
 
   return ZIP_FILE_HEADER_SIZE;
 }
@@ -159,17 +131,17 @@ read_local_header( zip_local_header *local_info,
     return 0;
   }
 
-  read4( (libspectrum_byte *)&local_info->magic, &buffer );
-  read2( (libspectrum_byte *)&local_info->required_version, &buffer );
-  read2( (libspectrum_byte *)&local_info->flags, &buffer );
-  read2( (libspectrum_byte *)&local_info->compression, &buffer );
-  read2( (libspectrum_byte *)&local_info->mod_time, &buffer );
-  read2( (libspectrum_byte *)&local_info->mod_date, &buffer );
-  read4( (libspectrum_byte *)&local_info->crc, &buffer );
-  read4( (libspectrum_byte *)&local_info->compressed_size, &buffer );
-  read4( (libspectrum_byte *)&local_info->uncompressed_size, &buffer );
-  read2( (libspectrum_byte *)&local_info->name_size, &buffer );
-  read2( (libspectrum_byte *)&local_info->extra_field_size, &buffer );
+  local_info->magic = libspectrum_read_dword( &buffer );
+  local_info->required_version = libspectrum_read_word( &buffer );
+  local_info->flags = libspectrum_read_word( &buffer );
+  local_info->compression = libspectrum_read_word( &buffer );
+  local_info->mod_time = libspectrum_read_word( &buffer );
+  local_info->mod_date = libspectrum_read_word( &buffer );
+  local_info->crc = libspectrum_read_dword( &buffer );
+  local_info->compressed_size = libspectrum_read_dword( &buffer );
+  local_info->uncompressed_size = libspectrum_read_dword( &buffer );
+  local_info->name_size = libspectrum_read_word( &buffer );
+  local_info->extra_field_size = libspectrum_read_word( &buffer );
 
   return ZIP_LOCAL_HEADER_SIZE;
 }
@@ -338,7 +310,7 @@ libspectrum_zip_open( const libspectrum_byte *buffer, size_t length )
 
   if( !buffer || !length ) return NULL;
 
-  z = libspectrum_calloc( 1, sizeof( struct libspectrum_zip ) );
+  z = libspectrum_new0( libspectrum_zip, 1 );
   z->input_data = buffer;
   z->ptr = buffer;
   z->end = buffer + length;

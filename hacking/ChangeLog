@@ -1091,3 +1091,4 @@ hacking/ChangeLog: the small scale changelog for libspectrum
          low level as required (Fred).
 20160722 Makefile.am,internals.h,libspectrum.c,libspectrum.h.in,zip.[ch],zlib.c:
          add support for reading zip files (patch #343) (Patrik Rak and Sergio).
+20160722 zip.[ch]: use libspectrum functions for reading LSB values (Fred).
