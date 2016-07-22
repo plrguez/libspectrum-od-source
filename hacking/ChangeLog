@@ -1089,3 +1089,5 @@ hacking/ChangeLog: the small scale changelog for libspectrum
          zero-tail.pzx}: fix handling of 0 length tail pulses after PZX data
          blocks and ensure the first PZX pulse block pulse is marked as high or
          low level as required (Fred).
+20160722 Makefile.am,internals.h,libspectrum.c,libspectrum.h.in,zip.[ch],zlib.c:
+         add support for reading zip files (patch #343) (Patrik Rak and Sergio).

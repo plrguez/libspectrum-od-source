@@ -78,6 +78,13 @@ libspectrum_gzip_inflate( const libspectrum_byte *gzptr, size_t gzlength,
   return zlib_inflate( gzptr, gzlength, outptr, outlength, 1 );
 }
 
+libspectrum_error
+libspectrum_zip_inflate( const libspectrum_byte *zipptr, size_t ziplength,
+                         libspectrum_byte **outptr, size_t *outlength )
+{
+  return zlib_inflate( zipptr, ziplength, outptr, outlength, 1 );
+}
+
 static libspectrum_error
 zlib_inflate( const libspectrum_byte *gzptr, size_t gzlength,
 	      libspectrum_byte **outptr, size_t *outlength, int gzip_hack )

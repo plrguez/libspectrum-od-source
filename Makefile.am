@@ -60,6 +60,7 @@ libspectrum_la_SOURCES = bzip2.c \
                          windres.rc \
 			 z80.c \
 			 z80em.c \
+			 zip.c \
 			 zlib.c \
 			 zxs.c
 
@@ -81,7 +82,8 @@ libspectrum_la_DEPENDENCIES = @WINDRES_OBJ@
 BUILT_SOURCES = libspectrum.h snap_accessors.c tape_accessors.c tape_set.c
 
 nodist_include_HEADERS = libspectrum.h
-noinst_HEADERS = internals.h
+noinst_HEADERS = internals.h \
+			 zip.h
 
 noinst_PROGRAMS =
 noinst_DATA =
