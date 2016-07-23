@@ -1094,3 +1094,4 @@ hacking/ChangeLog: the small scale changelog for libspectrum
 20160722 zip.[ch]: use libspectrum functions for reading LSB values (Fred).
 20160722 zip.c: mark a bunch of internal functions as static (Fred).
 20160724 zip.c: make error reporting a bit more libspectrum-like (Fred).
+20160723 zip.c: fix loading ZIP files with comments (Sergio).

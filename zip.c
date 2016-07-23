@@ -183,13 +183,13 @@ locate_directory_info( struct libspectrum_zip *z, zip_directory_info *info )
         z->ptr[2] == 5  &&
         z->ptr[3] == 6 ) {
       error = read_directory_info( info, z->ptr, z->end );
-      if( error ) return error;
+      if( !error ) return LIBSPECTRUM_ERROR_NONE;
     }
 
     z->ptr--;
   }
 
-  return LIBSPECTRUM_ERROR_NONE;
+  return LIBSPECTRUM_ERROR_CORRUPT;
 }
 
 /* Locate the ZIP central directory */
