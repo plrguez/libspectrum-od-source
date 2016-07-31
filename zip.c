@@ -26,7 +26,11 @@
 
 */
 
+#include <config.h>
+
 #include <string.h>
+
+#define ZLIB_CONST
 #include <zlib.h>
 
 #include "internals.h"

@@ -1097,3 +1097,4 @@ hacking/ChangeLog: the small scale changelog for libspectrum
 20160723 zip.c: fix loading ZIP files with comments (Sergio).
 20160801 Makefile.am,configure.ac,zlib.c: disable zip suport when zlib is
          missing (Sergio).
+20160801 zip.c: activate the const-enabled zlib API (Sergio).
