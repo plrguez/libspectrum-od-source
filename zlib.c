@@ -28,8 +28,6 @@
 
 #include <config.h>
 
-#ifdef HAVE_ZLIB_H
-
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -361,5 +359,3 @@ libspectrum_zlib_compress( const libspectrum_byte *data, size_t length,
     return LIBSPECTRUM_ERROR_LOGIC;
   }
 }
-
-#endif				/* #ifdef HAVE_ZLIB_H */

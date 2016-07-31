@@ -60,9 +60,12 @@ libspectrum_la_SOURCES = bzip2.c \
                          windres.rc \
 			 z80.c \
 			 z80em.c \
-			 zip.c \
-			 zlib.c \
 			 zxs.c
+
+if HAVE_ZLIB
+libspectrum_la_SOURCES += zip.c \
+                          zlib.c
+endif
 
 ## The version info is made of three components: current, revision and age
 ## We update the version when we release according to the guide at
