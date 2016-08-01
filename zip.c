@@ -201,12 +201,12 @@ static libspectrum_error
 locate_directory( struct libspectrum_zip *z )
 {
   libspectrum_error error;
+  zip_directory_info info;
 
   if( z->directory_offset != 0 ) {
     return LIBSPECTRUM_ERROR_NONE;
   }
 
-  zip_directory_info info;
   error = locate_directory_info( z, &info );
   if( error ) return error;
 
@@ -250,6 +250,7 @@ static int
 read_directory( struct libspectrum_zip *z )
 {
   int retry, retval;
+  libspectrum_dword name_size, skip;
 
   do {
     retry = 0;
@@ -277,9 +278,8 @@ read_directory( struct libspectrum_zip *z )
     z->file_ignore_case = ( ( z->file_info.creator_version >> 8 ) != 3 );
 
     /* Read the name, but skip files with too long names */
-    libspectrum_dword skip = z->file_info.comment_size +
-                             z->file_info.extra_field_size;
-    libspectrum_dword name_size = z->file_info.name_size;
+    skip = z->file_info.comment_size + z->file_info.extra_field_size;
+    name_size = z->file_info.name_size;
 
     if( z->ptr + name_size > z->end ) {
       return 1;
@@ -513,6 +513,8 @@ libspectrum_zip_read( struct libspectrum_zip *z, libspectrum_byte **buffer,
 {
   const libspectrum_byte *last = z->ptr;
   libspectrum_error error;
+  libspectrum_dword file_crc;
+  libspectrum_word compression;
 
   error = prepare_stream( z );
   if( error ) {
@@ -528,7 +530,7 @@ libspectrum_zip_read( struct libspectrum_zip *z, libspectrum_byte **buffer,
   }
 
   /* Now read the data depending on the compression method used */
-  const libspectrum_word compression = z->file_info.compression;
+  compression = z->file_info.compression;
 
   switch( compression ) {
 
@@ -558,7 +560,7 @@ libspectrum_zip_read( struct libspectrum_zip *z, libspectrum_byte **buffer,
   z->ptr = last;
 
   /* Update the CRC, and report an error when it doesn't match at end */
-  libspectrum_dword file_crc = crc32( 0, *buffer, *size );
+  file_crc = crc32( 0, *buffer, *size );
 
   if( file_crc != z->file_info.crc ) {
     libspectrum_print_error( LIBSPECTRUM_ERROR_CORRUPT, "ZIP CRC mismatch" );
@@ -575,19 +577,17 @@ libspectrum_zip_blind_read( const libspectrum_byte *zipptr, size_t ziplength,
 {
   struct libspectrum_zip *z;
   zip_stat info;
-  int retval;
+  libspectrum_error error;
 
   z = libspectrum_zip_open( zipptr, ziplength );
   if( !z ) return LIBSPECTRUM_ERROR_INVALID;
 
   while( libspectrum_zip_next( z, &info ) == 0 ) {
+    libspectrum_id_t type;
+    libspectrum_class_t class;
 
     /* Skip directories and empty files */
     if( !info.size ) continue; 
-
-    libspectrum_id_t type;
-    libspectrum_class_t class;
-    int error;
 
     /* Try to identify the file by the filename */
     error = libspectrum_identify_file_raw( &type, info.filename, NULL, 0 );
@@ -601,10 +601,10 @@ libspectrum_zip_blind_read( const libspectrum_byte *zipptr, size_t ziplength,
         class != LIBSPECTRUM_CLASS_COMPRESSED &&
         class != LIBSPECTRUM_CLASS_AUXILIARY ) {
 
-      retval = libspectrum_zip_read( z, outptr, outlength );
+      error = libspectrum_zip_read( z, outptr, outlength );
       libspectrum_zip_close( z );
 
-      return retval;
+      return error;
     }
   }
 
