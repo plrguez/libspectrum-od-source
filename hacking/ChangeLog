@@ -1099,3 +1099,4 @@ hacking/ChangeLog: the small scale changelog for libspectrum
          missing (Sergio).
 20160801 zip.c: activate the const-enabled zlib API (Sergio).
 20160802 zip.c: avoid mixing declarations and code for C89 compilers (Sergio).
+20160802 zip.c: minor tweaks to make things a bit more idiomatic (Fred).

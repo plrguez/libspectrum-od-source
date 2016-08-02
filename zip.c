@@ -224,7 +224,7 @@ locate_directory( struct libspectrum_zip *z )
 unsigned int
 libspectrum_zip_num_entries( struct libspectrum_zip *z )
 {
-  return (z)? z->file_count : 0;
+  return z ? z->file_count : 0;
 }
 
 /* Rewind to beginning of ZIP directory */
@@ -344,7 +344,7 @@ dump_entry_stat( struct libspectrum_zip *z, zip_stat *info )
 
   strcpy( info->name, z->file_name );
   slash = strrchr( info->name, '/' );
-  info->filename = ( slash )? slash + 1 : info->name;
+  info->filename = slash ? slash + 1 : info->name;
 
   length = strlen( z->file_name );
   info->is_dir = ( z->file_name[ length - 1 ] == '/' ) ? 1 : 0;
@@ -357,9 +357,7 @@ dump_entry_stat( struct libspectrum_zip *z, zip_stat *info )
 int
 libspectrum_zip_next( struct libspectrum_zip *z, zip_stat *info )
 {
-  if( !z || z->state == ARCHIVE_CLOSED ) {
-    return 1;
-  }
+  if( !z || z->state == ARCHIVE_CLOSED ) return 1;
 
   if( read_directory( z ) ) return 1;
 
@@ -388,8 +386,8 @@ libspectrum_zip_locate( struct libspectrum_zip *z, const char *filename,
   }
 
   ignore_dir = flags & ZIPFLAG_NODIR;
-  ignore_case = ( flags & ZIPFLAG_AUTOCASE )? z->file_ignore_case :
-                                              ( flags & ZIPFLAG_NOCASE );
+  ignore_case = ( flags & ZIPFLAG_AUTOCASE ) ? z->file_ignore_case :
+                                               ( flags & ZIPFLAG_NOCASE );
 
   while( read_directory( z ) == 0 ) {
     const char *fname, *slash;
@@ -398,7 +396,7 @@ libspectrum_zip_locate( struct libspectrum_zip *z, const char *filename,
     fname = NULL;
     if( ignore_dir ) {
       slash = strrchr( z->file_name, '/' );
-      fname = ( slash )? slash + 1 : z->file_name;
+      fname = slash ? slash + 1 : z->file_name;
     } else {
       fname = z->file_name;
     }
@@ -454,7 +452,7 @@ prepare_stream( struct libspectrum_zip *z )
     return LIBSPECTRUM_ERROR_SIGNATURE;
   }
 
-  version = ( header.required_version & 0xff );
+  version = header.required_version & 0xff;
   if( version > ZIP_SUPPORTED_VERSION ) {
     libspectrum_print_error( LIBSPECTRUM_ERROR_SIGNATURE,
                              "Unsupported ZIP version %u.%u", version / 10,
