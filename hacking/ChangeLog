@@ -1120,3 +1120,13 @@ hacking/ChangeLog: the small scale changelog for libspectrum
 20160821 ChangeLog,README,configure.ac,doc/libspectrum.3: update release dates
          and mark this release as 1.2.2 (Fred).
 20160823 pzx_read.c,szx.c: fix compilation warnings (Phil).
+20160924 ChangeLog,Makefile.am,README,configure.ac: first updates for a "1.3.0"
+         release (Fred).
+20160924 doc/{libspectrum.3,libspectrum.txt}: more updates for a "1.3.0" release
+         (Fred).
+20160924 Makefile.am: change version to 12:3:4 as there are not ABI changes
+         since libspectrum 1.2.2 (Sergio).
+20161002 ChangeLog,README,doc/libspectrum.3: update release dates for 1.3.0
+         (Fred).
+20161018 ChangeLog,Makefile.am,README,configure.ac,doc/{libspectrum.3,
+         libspectrum.txt}: merge changes from 1.3.0 release (Fred).
