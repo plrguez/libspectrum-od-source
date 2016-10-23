@@ -1,5 +1,6 @@
 /*.dSYM
 /*.lo
+/*.o
 /.deps
 /.libs
 /Makefile
