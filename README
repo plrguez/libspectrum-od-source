@@ -44,10 +44,10 @@ For updates for libspectrum, its homepage is at:
 
 http://fuse-emulator.sourceforge.net/libspectrum.php
 
-Compiling from Subversion
--------------------------
+Compiling from Git
+------------------
 
-If you're using version of libspectrum from Subversion rather than one
+If you're using version of libspectrum from Git rather than one
 of the released tarballs, you'll need to run `autogen.sh' before
 running 'configure' for the first time.
 
@@ -68,5 +68,3 @@ Then, type "make" and if everything went well, "make install".
 
 Philip Kendall <philip-fuse@shadowmagic.org.uk>
 2nd October, 2016
-
-$Id$
