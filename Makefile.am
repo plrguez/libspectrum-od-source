@@ -137,6 +137,5 @@ CLEANFILES = libspectrum.h \
 	     make-perl$(EXEEXT)
 
 include doc/Makefile.am
-include hacking/Makefile.am
 include myglib/Makefile.am
 include test/Makefile.am
