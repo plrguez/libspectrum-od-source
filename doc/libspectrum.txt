@@ -1867,5 +1867,3 @@ libspectrum_ide_write( libspectrum_ide_channel *chn,
 		       libspectrum_ide_register reg, libspectrum_byte data )
 
 Write `data' to register `reg' of the IDE channel `chn'.
-
-$Id$

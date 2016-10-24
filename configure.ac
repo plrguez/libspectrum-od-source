@@ -1,8 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl Copyright (c) 1999-2013 Philip Kendall
 
-dnl $Id$
-
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
 dnl the Free Software Foundation; either version 2 of the License, or
