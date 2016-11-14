@@ -120,6 +120,8 @@ g_array_free( GArray *array, gboolean free_segment )
 {
   gchar* segment;
 
+  if( !array ) return NULL;
+
   if( free_segment ) {
     libspectrum_free( array->data );
     segment = NULL;
