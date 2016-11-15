@@ -32,9 +32,13 @@
 
 #include <config.h>
 
-#ifndef HAVE_LIB_GLIB		/* Use this iff we're not using the 
+#ifndef HAVE_LIB_GLIB		/* Use this iff we're not using the
 				   `proper' glib */
 #include <string.h>
+
+#ifdef HAVE_STDATOMIC_H
+# include <stdatomic.h>
+#endif
 
 #include "internals.h"
 
@@ -61,6 +65,17 @@ struct _GHashTable
 
 static GHashNode *node_free_list = NULL;
 static GHashNode *node_allocated_list = NULL;
+
+#ifdef HAVE_STDATOMIC_H
+static atomic_char atomic_locker = ATOMIC_VAR_INIT(0);
+extern void atomic_lock(atomic_char *lock_ptr);
+extern void atomic_unlock(atomic_char *lock_ptr);
+# define lock_hash() atomic_lock(&atomic_locker)
+# define unlock_hash() atomic_unlock(&atomic_locker)
+#else
+# define lock_hash()
+# define unlock_hash()
+#endif
 
 static guint
 g_direct_hash (gconstpointer v)
@@ -122,8 +137,10 @@ g_hash_nodes_destroy (GHashNode *hash_node,
       if (value_destroy_func)
         value_destroy_func (node->value);
 
+      lock_hash();
       node->next = node_free_list;
       node_free_list = hash_node;
+      unlock_hash();
     }
 }
 
@@ -181,6 +198,7 @@ g_hash_node_new (gpointer key,
   GHashNode *hash_node;
   guint i;
 
+  lock_hash();
   if (!node_free_list)
     {
       node_free_list = libspectrum_malloc (1024 * sizeof (GHashNode));
@@ -194,7 +212,8 @@ g_hash_node_new (gpointer key,
   
   hash_node = node_free_list;
   node_free_list = node_free_list->next;
-  
+  unlock_hash();
+
   hash_node->key = key;
   hash_node->value = value;
   hash_node->next = NULL;
@@ -239,8 +258,10 @@ g_hash_node_destroy (GHashNode *hash_node,
   if (value_destroy_func)
     value_destroy_func (hash_node->value);
 
+  lock_hash();
   hash_node->next = node_free_list;
   node_free_list = hash_node;
+  unlock_hash();
 }
 
 guint
@@ -348,8 +369,10 @@ g_str_equal (gconstpointer v1,
 void
 libspectrum_hashtable_cleanup( void )
 {
+  lock_hash();
   libspectrum_free( node_allocated_list );
   node_allocated_list = NULL;
   node_free_list = NULL;
+  unlock_hash();
 }
 #endif				/* #ifndef HAVE_LIB_GLIB */

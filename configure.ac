@@ -179,6 +179,10 @@ AS_IF([test "$myglib" = no], [
     AC_MSG_ERROR([GLib not found])
   )
 ])
+AS_IF([test "$myglib" = yes], [
+  AC_CHECK_HEADERS(
+    stdatomic.h)
+])
 
 AM_CONDITIONAL(USE_MYGLIB, test "$myglib" = yes)
 
