@@ -181,10 +181,11 @@ AS_IF([test "$myglib" = no], [
 ])
 AS_IF([test "$myglib" = yes], [
   AC_CHECK_HEADERS(
-    stdatomic.h)
+    stdatomic.h, [stdatomic_available=yes])
 ])
 
 AM_CONDITIONAL(USE_MYGLIB, test "$myglib" = yes)
+AM_CONDITIONAL(HAVE_LOCK, test "$stdatomic_available" = yes)
 
 dnl If it appears we're using gcc as our compiler, turn on warnings
 if test "$ac_cv_c_compiler_gnu" = yes; then

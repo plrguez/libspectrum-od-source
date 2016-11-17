@@ -1,4 +1,6 @@
-/*
+/* glock.c: Routines for locking critical sections
+   Copyright (c) 2016 BogDan Vatra
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -20,26 +22,24 @@
 
 #include <config.h>
 
-#ifdef HAVE_STDATOMIC_H
-# include <stdatomic.h>
+#include <stdatomic.h>
 
-void atomic_lock(atomic_char *lock_ptr)
+void
+atomic_lock( atomic_char *lock_ptr )
 {
-    int res = 0;
-    do {
-        atomic_char unlocked = ATOMIC_VAR_INIT(0);
-        atomic_char locked = ATOMIC_VAR_INIT(1);
-        res = atomic_compare_exchange_strong(lock_ptr, &unlocked, locked);
-    } while(!res);
+  char locked = ATOMIC_VAR_INIT( 1 );
+  char unlocked;
+  do {
+    unlocked = ATOMIC_VAR_INIT( 0 );
+  } while( !atomic_compare_exchange_strong( lock_ptr, &unlocked, locked ) );
 }
 
-void atomic_unlock(atomic_char *lock_ptr)
+void
+atomic_unlock( atomic_char *lock_ptr )
 {
-    int res = 0;
-    do {
-        atomic_char unlocked = ATOMIC_VAR_INIT(0);
-        atomic_char locked = ATOMIC_VAR_INIT(1);
-        res = atomic_compare_exchange_strong(lock_ptr, &locked, unlocked);
-    } while(!res);
+  char locked;
+  char unlocked = ATOMIC_VAR_INIT( 0 );
+  do {
+    locked = ATOMIC_VAR_INIT( 1 );
+  } while( !atomic_compare_exchange_strong( lock_ptr, &locked, unlocked ) );
 }
-#endif

@@ -28,10 +28,6 @@
 
 #include <stdlib.h>
 
-#ifdef HAVE_STDATOMIC_H
-# include <stdatomic.h>
-#endif
-
 #include "internals.h"
 
 static
@@ -48,20 +44,22 @@ GSList * free_list = NULL;
 GSList * allocated_list = NULL;
 
 #ifdef HAVE_STDATOMIC_H
-static atomic_char atomic_locker = ATOMIC_VAR_INIT(0);
-extern void atomic_lock(atomic_char *lock_ptr);
-extern void atomic_unlock(atomic_char *lock_ptr);
-# define lock_list() atomic_lock(&atomic_locker)
-# define unlock_list() atomic_unlock(&atomic_locker)
-#else
-# define lock_list()
-# define unlock_list()
-#endif
 
+static atomic_char atomic_locker = ATOMIC_VAR_INIT(0);
+
+#define lock() atomic_lock( &atomic_locker )
+#define unlock() atomic_unlock( &atomic_locker )
+
+#else				/* #ifdef HAVE_STDATOMIC_H */
+
+#define lock()
+#define unlock()
+
+#endif				/* #ifdef HAVE_STDATOMIC_H */
 
 static
 void    allocate_free   ( void ) {
-    lock_list();
+    lock();
     if(!free_list) {
         int i;
         free_list=libspectrum_malloc(FREE_LIST_ALLOCATE_CHUNK*sizeof(GSList));
@@ -70,7 +68,7 @@ void    allocate_free   ( void ) {
             free_list[i].next=&free_list[i+1];
         free_list[FREE_LIST_ALLOCATE_CHUNK-1].next=NULL;
     }
-    unlock_list();
+    unlock();
 }
 
 
@@ -89,10 +87,10 @@ GSList* g_slist_insert	(GSList		*list,
 
   allocate_free();
 
-  lock_list();
+  lock();
   new_list = free_list;
   free_list=free_list->next;
-  unlock_list();
+  unlock();
   new_list->data = data;
   new_list->next=NULL;
 
@@ -139,10 +137,10 @@ GSList* g_slist_insert_sorted	(GSList		*list,
 
   if (!list)
     {
-      lock_list();
+      lock();
       new_list = free_list;
       free_list=free_list->next;
-      unlock_list();
+      unlock();
       new_list->data = data;
       new_list->next=NULL;
       return new_list;
@@ -157,10 +155,10 @@ GSList* g_slist_insert_sorted	(GSList		*list,
       cmp = (*func) (data, tmp_list->data);
     }
 
-  lock_list();
+  lock();
   new_list = free_list;
   free_list=free_list->next;
-  unlock_list();
+  unlock();
   new_list->data = data;
 
   if ((!tmp_list->next) && (cmp > 0))
@@ -316,10 +314,10 @@ void	g_slist_free		(GSList		*list) {
       while( last_node->next )
 	last_node = last_node->next;
 
-      lock_list();
+      lock();
       last_node->next = free_list;
       free_list = list;
-      unlock_list();
+      unlock();
     }
 }
 
@@ -381,11 +379,11 @@ gint	g_slist_position	(GSList		*list,
 void
 libspectrum_slist_cleanup( void )
 {
-  lock_list();
+  lock();
   libspectrum_free( allocated_list );
   allocated_list = NULL;
   free_list = NULL;
-  unlock_list();
+  unlock();
 }
 
 #endif				/* #ifndef HAVE_LIB_GLIB */

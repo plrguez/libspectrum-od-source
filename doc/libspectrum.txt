@@ -1867,3 +1867,29 @@ libspectrum_ide_write( libspectrum_ide_channel *chn,
 		       libspectrum_ide_register reg, libspectrum_byte data )
 
 Write `data' to register `reg' of the IDE channel `chn'.
+
+Thread Safety
+=============
+
+libspectrum uses either glib or a libspectrum-supplied alternative as part of
+the implementation of several internal data structures - notably in tape and
+hard disk handling.
+
+When glib is in use, the glib documentation[1] describes the threading support
+as follows:
+
+  GLib itself is internally completely thread-safe (all global data is
+  automatically locked), but individual data structure instances are not
+  automatically locked for performance reasons. For example, you must coordinate
+  accesses to the same GHashTable from multiple threads.
+
+When the glib replacement is in use, there are two modes of thread safety:
+
+1. If the C11 header stdatomic.h is not available there is no locking of data
+    structures, and libspectrum should be considered to not be thread-safe
+    modifying any data structures
+2. If the C11 header stdatomic.h is available the global data used in allocating
+    the list and hash table data structures are locked when changes are being
+    made but individual data structure instances are not automatically locked.
+
+[1] <https://developer.gnome.org/glib/stable/glib-Threads.html>
