@@ -9,6 +9,7 @@
 /config.status
 /config.sub
 /configure
+.DS_Store
 /depcomp
 .deps
 .dirstamp
