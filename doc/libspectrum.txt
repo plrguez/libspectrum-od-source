@@ -276,6 +276,8 @@ the following values:
 
 LIBSPECTRUM_ID_UNKNOWN		Couldn't identify this file
 
+LIBSPECTRUM_ID_AUX_POK		A .pok poke file
+
 LIBSPECTRUM_ID_CARTRIDGE_DCK	A .dck Timex dock image
 LIBSPECTRUM_ID_CARTRIDGE_IF2	A .rom Interface 2 cartridge
 
@@ -283,10 +285,14 @@ LIBSPECTRUM_ID_COMPRESSED_BZ2	A bzip2 compressed file
 LIBSPECTRUM_ID_COMPRESSED_GZ	A gzip compressed file
 LIBSPECTRUM_ID_COMPRESSED_ZIP	A zip compressed file
 
+LIBSPECTRUM_ID_DISK_D80		A .d80 or .d40 Didaktik 80/40 disk file
 LIBSPECTRUM_ID_DISK_DSK		A .dsk +3 disk file
 LIBSPECTRUM_ID_DISK_CPC		A plain .dsk +3 disk file
 LIBSPECTRUM_ID_DISK_ECPC	An extended .dsk +3 disk file
 LIBSPECTRUM_ID_DISK_FDI		A .fdi generic disk file
+LIBSPECTRUM_ID_DISK_IMG		A .img DISCiPLE/+D disk file
+LIBSPECTRUM_ID_DISK_MGT		A .mgt DISCiPLE/+D disk file
+LIBSPECTRUM_ID_DISK_OPD		A .opd or .opu Opus Discovery disk file
 LIBSPECTRUM_ID_DISK_SAD		A .sad generic disk file
 LIBSPECTRUM_ID_DISK_SCL		A .scl TRDOS disk file
 LIBSPECTRUM_ID_DISK_TRD		A .trd TRDOS disk file
@@ -350,10 +356,13 @@ which returns the type of file represented by the `type' parameter in
 
 LIBSPECTRUM_CLASS_UNKNOWN		An unknown file type
 
+LIBSPECTRUM_CLASS_AUXILIARY		An auxiliary file
 LIBSPECTRUM_CLASS_CARTRIDGE_TIMEX	A Timex dock cartridge
 LIBSPECTRUM_CLASS_CARTRIDGE_IF2		An Interface 2 cartridge
+LIBSPECTRUM_CLASS_DISK_DIDAKTIK	A Didaktik 80/40 disk image
 LIBSPECTRUM_CLASS_DISK_GENERIC		A generic disk image
-LIBSPECTRUM_CLASS_DISK_PLUSD		An MGT/+D disk image
+LIBSPECTRUM_CLASS_DISK_OPUS		An Opus Discovery disk image
+LIBSPECTRUM_CLASS_DISK_PLUSD		A DISCiPLE/+D disk image
 LIBSPECTRUM_CLASS_DISK_PLUS3		A +3 disk image
 LIBSPECTRUM_CLASS_DISK_TRDOS		A TRDOS disk image
 LIBSPECTRUM_CLASS_HARDDISK		An IDE hard disk image
