@@ -216,6 +216,8 @@ static const libspectrum_byte ZXSTSNEF_FLASH_COMPRESSED = 1;
 #define ZXSTBID_SPECTRANETRAMPAGE "SNER"
 static const libspectrum_byte ZXSTSNER_RAM_COMPRESSED = 1;
 
+#define ZXSTBID_PALETTE "PLTT"
+
 static libspectrum_error
 read_chunk( libspectrum_snap *snap, libspectrum_word version,
 	    const libspectrum_byte **buffer, const libspectrum_byte *end,
@@ -2192,6 +2194,7 @@ static struct read_chunk_t read_chunks[] = {
   { ZXSTBID_MULTIFACE,	         skip_chunk      },
   { ZXSTBID_OPUS,	         read_opus_chunk },
   { ZXSTBID_OPUSDISK,	         skip_chunk      },
+  { ZXSTBID_PALETTE,	         skip_chunk      },
   { ZXSTBID_PLUS3DISK,	         skip_chunk      },
   { ZXSTBID_PLUSD,	         read_plsd_chunk },
   { ZXSTBID_PLUSDDISK,	         skip_chunk      },
