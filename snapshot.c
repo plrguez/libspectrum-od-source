@@ -256,6 +256,9 @@ libspectrum_snap_alloc( void )
   libspectrum_snap_set_didaktik80_rom_length( snap, 0, 0 );
   libspectrum_snap_set_didaktik80_ram( snap, 0, NULL );
 
+  libspectrum_snap_set_covox_active( snap, 0 );
+  libspectrum_snap_set_covox_dac( snap, 0 );
+
   return snap;
 }
 

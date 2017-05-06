@@ -227,3 +227,6 @@ libspectrum_byte didaktik80_data
 libspectrum_byte didaktik80_status
 libspectrum_byte* didaktik80_rom 1
 libspectrum_byte* didaktik80_ram 1
+
+int covox_active
+libspectrum_byte covox_dac

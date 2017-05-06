@@ -338,6 +338,9 @@ write_dirp_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 static libspectrum_error
 write_zxpr_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 		  size_t *length, int *out_flags, libspectrum_snap *snap );
+static libspectrum_error
+write_covx_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
+		  size_t *length, libspectrum_snap *snap );
 
 static void
 write_chunk_header( libspectrum_byte **buffer, libspectrum_byte **ptr,
@@ -554,6 +557,28 @@ read_b128_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 
   /* Skip any extra data (most likely a custom ROM) */
   *buffer += data_length - 10;
+
+  return LIBSPECTRUM_ERROR_NONE;
+}
+
+static libspectrum_error
+read_covx_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
+		 const libspectrum_byte **buffer,
+		 const libspectrum_byte *end GCC_UNUSED, size_t data_length,
+		 szx_context *ctx )
+{
+  if( data_length != 4 ) {
+    libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
+			     "%s:read_covx_chunk: unknown length %lu",
+			     __FILE__, (unsigned long)data_length );
+    return LIBSPECTRUM_ERROR_UNKNOWN;
+  }
+
+  libspectrum_snap_set_covox_dac( snap, *(*buffer)++ );
+
+  libspectrum_snap_set_covox_active( snap, 1 );
+
+  *buffer += 3;			/* Skip 'reserved' data */
 
   return LIBSPECTRUM_ERROR_NONE;
 }
@@ -2175,7 +2200,7 @@ static struct read_chunk_t read_chunks[] = {
   { ZXSTBID_AY,		         read_ay_chunk   },
   { ZXSTBID_BETA128,	         read_b128_chunk },
   { ZXSTBID_BETADISK,	         skip_chunk      },
-  { ZXSTBID_COVOX,	         skip_chunk      },
+  { ZXSTBID_COVOX,	         read_covx_chunk },
   { ZXSTBID_CREATOR,	         read_crtr_chunk },
   { ZXSTBID_DIVIDE,	         read_dide_chunk },
   { ZXSTBID_DIVIDERAMPAGE,       read_dirp_chunk },
@@ -2596,6 +2621,11 @@ libspectrum_szx_write( libspectrum_byte **buffer, size_t *length,
 
   error = write_zxpr_chunk( buffer, &ptr, length, out_flags, snap );
   if( error ) return error;
+
+  if( libspectrum_snap_covox_active( snap ) ) {
+    error = write_covx_chunk( buffer, &ptr, length, snap );
+    if( error ) return error;
+  }
 
   /* Set length to be actual length, not allocated length */
   *length = ptr - *buffer;
@@ -3701,6 +3731,22 @@ write_drum_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
   write_chunk_header( buffer, ptr, length, ZXSTBID_SPECDRUM, 1 );
 
   *(*ptr)++ = libspectrum_snap_specdrum_dac( snap );
+
+  return LIBSPECTRUM_ERROR_NONE;
+}
+
+static libspectrum_error
+write_covx_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
+		  size_t *length, libspectrum_snap *snap )
+{
+  write_chunk_header( buffer, ptr, length, ZXSTBID_COVOX, 4 );
+
+  *(*ptr)++ = libspectrum_snap_covox_dac( snap );
+
+  /* Write 'reserved' data */
+  *(*ptr)++ = '\0';
+  *(*ptr)++ = '\0';
+  *(*ptr)++ = '\0';
 
   return LIBSPECTRUM_ERROR_NONE;
 }
