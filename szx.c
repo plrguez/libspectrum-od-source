@@ -1058,6 +1058,8 @@ read_drum_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 		 const libspectrum_byte *end GCC_UNUSED, size_t data_length,
                  szx_context *ctx GCC_UNUSED )
 {
+  libspectrum_byte volume;
+
   if( data_length != 1 ) {
     libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
 			     "%s:read_drum_chunk: unknown length %lu",
@@ -1065,7 +1067,9 @@ read_drum_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
     return LIBSPECTRUM_ERROR_UNKNOWN;
   }
 
-  libspectrum_snap_set_specdrum_dac( snap, *(*buffer)++ );
+  volume = *(*buffer)++;
+
+  libspectrum_snap_set_specdrum_dac( snap, volume - 128 );
 
   libspectrum_snap_set_specdrum_active( snap, 1 );
 
@@ -3730,7 +3734,7 @@ write_drum_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 {
   write_chunk_header( buffer, ptr, length, ZXSTBID_SPECDRUM, 1 );
 
-  *(*ptr)++ = libspectrum_snap_specdrum_dac( snap );
+  *(*ptr)++ = libspectrum_snap_specdrum_dac( snap ) + 128;
 
   return LIBSPECTRUM_ERROR_NONE;
 }
