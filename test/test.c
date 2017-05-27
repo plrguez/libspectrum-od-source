@@ -166,16 +166,16 @@ play_tape( const char *filename )
 
 /* Specific tests begin here */
 
-/* Test for bugs #1479451 and #1706994: tape object incorrectly freed
-   after reading invalid tape */
+/* Test for bugs #47 and #78: tape object incorrectly freed after reading
+   invalid tape */
 static test_return_t
 test_1( void )
 {
   return read_tape( STATIC_TEST_PATH( "invalid.tzx" ), LIBSPECTRUM_ERROR_UNKNOWN );
 }
 
-/* Test for bugs #1720238: TZX turbo blocks with zero pilot pulses and
-   #1720270: freeing a turbo block with no data produces segfault */
+/* Test for bugs #84: TZX turbo blocks with zero pilot pulses and #85: freeing
+   a turbo block with no data produces segfault */
 static test_return_t
 test_2( void )
 {
@@ -223,7 +223,7 @@ test_2( void )
   return TEST_PASS;
 }
 
-/* Test for bug #1725864: writing empty .tap file causes crash */
+/* Test for bug #88: writing empty .tap file causes crash */
 static test_return_t
 test_3( void )
 {
@@ -250,7 +250,7 @@ test_3( void )
   return TEST_PASS;
 }
 
-/* Test for bug #1753279: invalid compressed file causes crash */
+/* Test for bug #102: invalid compressed file causes crash */
 static test_return_t
 test_4( void )
 {
@@ -258,14 +258,14 @@ test_4( void )
   return read_snap( filename, filename, LIBSPECTRUM_ERROR_UNKNOWN );
 }
 
-/* Further test for bug #1753279: invalid compressed file causes crash */
+/* Further test for bug #102: invalid compressed file causes crash */
 static test_return_t
 test_5( void )
 {
   return read_snap( STATIC_TEST_PATH( "invalid.gz" ), NULL, LIBSPECTRUM_ERROR_UNKNOWN );
 }
 
-/* Test for bug #1753938: pointer wraparound causes segfault */
+/* Test for bug #103: pointer wraparound causes segfault */
 static test_return_t
 test_6( void )
 {
@@ -273,50 +273,50 @@ test_6( void )
   return read_snap( filename, filename, LIBSPECTRUM_ERROR_CORRUPT );
 }
 
-/* Test for bug #1755124: lack of sanity check in GDB code */
+/* Test for bug #105: lack of sanity check in GDB code */
 static test_return_t
 test_7( void )
 {
   return read_tape( STATIC_TEST_PATH( "invalid-gdb.tzx" ), LIBSPECTRUM_ERROR_CORRUPT );
 }
 
-/* Test for bug #1755372: empty DRB causes segfault */
+/* Test for bug #106: empty DRB causes segfault */
 static test_return_t
 test_8( void )
 {
   return read_tape( STATIC_TEST_PATH( "empty-drb.tzx" ), LIBSPECTRUM_ERROR_NONE );
 }
 
-/* Test for bug #1755539: problems with invalid archive info block */
+/* Test for bug #107: problems with invalid archive info block */
 static test_return_t
 test_9( void )
 {
   return read_tape( STATIC_TEST_PATH( "invalid-archiveinfo.tzx" ), LIBSPECTRUM_ERROR_CORRUPT );
 }
 
-/* Test for bug #1755545: invalid hardware info blocks can leak memory */
+/* Test for bug #108: invalid hardware info blocks can leak memory */
 static test_return_t
 test_10( void )
 {
   return read_tape( STATIC_TEST_PATH( "invalid-hardwareinfo.tzx" ), LIBSPECTRUM_ERROR_CORRUPT );
 }
 
-/* Test for bug #1756375: invalid Warajevo tape block offset causes segfault */
+/* Test for bug #111: invalid Warajevo tape block offset causes segfault */
 static test_return_t
 test_11( void )
 {
   return read_tape( STATIC_TEST_PATH( "invalid-warajevo-blockoffset.tap" ), LIBSPECTRUM_ERROR_CORRUPT );
 }
 
-/* Test for bug #1757587: invalid custom info block causes memory leak */
+/* Test for bug #112: invalid custom info block causes memory leak */
 static test_return_t
 test_12( void )
 {
   return read_tape( STATIC_TEST_PATH( "invalid-custominfo.tzx" ), LIBSPECTRUM_ERROR_CORRUPT );
 }
 
-/* Test for bug #1758860: loop end without a loop start block accesses
-   uninitialised memory */
+/* Test for bug #113: loop end without a loop start block accesses uninitialised
+   memory */
 static test_return_t
 test_13( void )
 {
@@ -350,35 +350,35 @@ test_13( void )
   return TEST_PASS;
 }
 
-/* Test for bug #1758860: TZX loop blocks broken */
+/* Test for bug #113: TZX loop blocks broken */
 static test_return_t
 test_14( void )
 {
   return play_tape( STATIC_TEST_PATH( "loop.tzx" ) );
 }
 
-/* Test for bug #1802607: TZX loop blocks still broken */
+/* Test for bug #118: TZX loop blocks still broken */
 static test_return_t
 test_16( void )
 {
   return play_tape( STATIC_TEST_PATH( "loop2.tzx" ) );
 }
 
-/* Test for bug #1802618: TZX jump blocks broken */
+/* Test for bug #119: TZX jump blocks broken */
 static test_return_t
 test_17( void )
 {
   return play_tape( STATIC_TEST_PATH( "jump.tzx" ) );
 }
 
-/* Test for bug #1821425: crashes writing and reading empty CSW files */
+/* Test for bug #121: crashes writing and reading empty CSW files */
 static test_return_t
 test_18( void )
 {
   return play_tape( STATIC_TEST_PATH( "empty.csw" ) );
 }
 
-/* Test for bug #1828945: .tap writing code does not handle all block types */
+/* Test for bug #125: .tap writing code does not handle all block types */
 static test_return_t
 test_19( void )
 {
@@ -406,8 +406,8 @@ test_19( void )
   return TEST_PASS;
 }
 
-/* Tests for bug #1841085: SP not sanity checked when reading .sna files;
-   also tests bug #1841111: compressed snapshots cause segfault */
+/* Tests for bug #129: SP not sanity checked when reading .sna files;
+   also tests bug #130: compressed snapshots cause segfault */
 static test_return_t
 test_20( void )
 {
@@ -422,8 +422,7 @@ test_21( void )
   return read_snap( filename, filename, LIBSPECTRUM_ERROR_CORRUPT );
 } 
 
-/* Tests for bug #2002682: .mdr code does not correctly handle write protect
-   flag */
+/* Tests for bug #152: .mdr code does not correctly handle write protect flag */
 static test_return_t
 test_22( void )
 {
@@ -626,8 +625,7 @@ test_25( void )
   return r;
 }
 
-/* Tests for bug #3078262: last out to 0x1ffd is not serialised into .z80
-   files */
+/* Tests for bug #198: last out to 0x1ffd is not serialised into .z80 files */
 static test_return_t
 test_26( void )
 {
@@ -686,7 +684,7 @@ test_26( void )
   return r;
 }
 
-/* Tests for bug #2857419: SZX files were written with A and F reversed */
+/* Tests for bug #184: SZX files were written with A and F reversed */
 static test_return_t
 test_27( void )
 {
