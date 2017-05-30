@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 ## Copyright (c) 2001-2016 Philip Kendall
 
-## $Id$
-
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
@@ -60,10 +58,23 @@ libspectrum_la_SOURCES = bzip2.c \
                          windres.rc \
 			 z80.c \
 			 z80em.c \
-			 zlib.c \
 			 zxs.c
 
-libspectrum_la_LDFLAGS = -version-info 10:0:2 -no-undefined @WINDRES_LDFLAGS@
+if HAVE_ZLIB
+libspectrum_la_SOURCES += zip.c \
+                          zlib.c
+endif
+
+## The version info is made of three components: current, revision and age
+## We update the version when we release according to the guide at
+## https://autotools.io/libtool/version.html
+## The rules of thumb, when dealing with these values are:
+## * Increase the current value whenever an interface has been added, removed or
+##   changed.
+## * Always increase the revision value.
+## * Increase the age value only if the changes made to the ABI are backward
+##   compatible.
+libspectrum_la_LDFLAGS = -version-info 12:6:4 -no-undefined @WINDRES_LDFLAGS@
 
 libspectrum_la_LIBADD = @AUDIOFILE_LIBS@ @GLIB_LIBS@ -lm
 
@@ -72,7 +83,8 @@ libspectrum_la_DEPENDENCIES = @WINDRES_OBJ@
 BUILT_SOURCES = libspectrum.h snap_accessors.c tape_accessors.c tape_set.c
 
 nodist_include_HEADERS = libspectrum.h
-noinst_HEADERS = internals.h
+noinst_HEADERS = internals.h \
+			 zip.h
 
 noinst_PROGRAMS =
 noinst_DATA =
@@ -125,6 +137,5 @@ CLEANFILES = libspectrum.h \
 	     make-perl$(EXEEXT)
 
 include doc/Makefile.am
-include hacking/Makefile.am
 include myglib/Makefile.am
 include test/Makefile.am

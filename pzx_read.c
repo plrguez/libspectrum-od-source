@@ -2,8 +2,6 @@
    Copyright (c) 2001, 2002 Philip Kendall, Darren Salt
    Copyright (c) 2011-2015 Fredrick Meunier
 
-   $Id$
-
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -26,7 +24,6 @@
 
 #include <config.h>
 
-#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -40,9 +37,6 @@ typedef struct pzx_context {
   libspectrum_word version;
 
 } pzx_context;
-
-static const libspectrum_byte PZX_VERSION_MAJOR = 1;
-static const libspectrum_byte PZX_VERSION_MINOR = 0;
 
 /* Constants etc for each block type */
 
@@ -258,7 +252,7 @@ read_data_block( libspectrum_tape *tape, const libspectrum_byte **buffer,
   count = libspectrum_read_dword( buffer );
   initial_level = !!(count & 0x80000000);
   count &= 0x7fffffff;
-  count_bytes = ceil( count / (double)LIBSPECTRUM_BITS_IN_BYTE );
+  count_bytes = libspectrum_bits_to_bytes( count );
   bits_in_last_byte =
     count % LIBSPECTRUM_BITS_IN_BYTE ?
       count % LIBSPECTRUM_BITS_IN_BYTE : LIBSPECTRUM_BITS_IN_BYTE;
@@ -657,9 +651,9 @@ pzx_read_string( const libspectrum_byte **ptr, const libspectrum_byte *end,
     *(buffer + length++) = **ptr; (*ptr)++;
   }
 
-  /* Advance past the null terminator if it isn't the end of the block */
-  if( **ptr == '\0' && *ptr < end ) (*ptr)++;
-  
+  /* Advance past the null terminator discarding any garbage */
+  *ptr = end;
+
   *dest = libspectrum_new( char, (length + 1) );
 
   strncpy( *dest, buffer, length );

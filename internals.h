@@ -2,8 +2,6 @@
                 routines, but not by user code
    Copyright (c) 2001-2015 Philip Kendall, Darren Salt
 
-   $Id$
-
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -102,6 +100,11 @@
 #define strncasecmp _strnicmp
 #endif		/* #if !defined(HAVE_STRNCASECMP) && defined(HAVE__STRNICMP) */
 
+#ifndef MAX
+#define MAX(a,b)    (((a) > (b)) ? (a) : (b))
+#define MIN(a,b)    (((a) < (b)) ? (a) : (b))
+#endif
+
 /* Print using the user-provided error function */
 libspectrum_error
 libspectrum_print_error( libspectrum_error error, const char *format, ... )
@@ -132,6 +135,14 @@ libspectrum_gzip_inflate( const libspectrum_byte *gzptr, size_t gzlength,
 libspectrum_error
 libspectrum_bzip2_inflate( const libspectrum_byte *bzptr, size_t bzlength,
 			   libspectrum_byte **outptr, size_t *outlength );
+
+libspectrum_error
+libspectrum_zip_inflate( const libspectrum_byte *zipptr, size_t ziplength,
+			  libspectrum_byte **outptr, size_t *outlength );
+
+libspectrum_error
+libspectrum_zip_blind_read( const libspectrum_byte *zipptr, size_t ziplength,
+                            libspectrum_byte **outptr, size_t *outlength );
 
 /* The TZX file signature */
 
@@ -287,6 +298,9 @@ void
 libspectrum_set_pause_tstates( libspectrum_tape_block *block,
                                libspectrum_dword pause_tstates );
 
+size_t
+libspectrum_bits_to_bytes( size_t bits );
+
 extern const int LIBSPECTRUM_BITS_IN_BYTE;
 
 /* glib replacement functions */
@@ -297,6 +311,18 @@ libspectrum_slist_cleanup( void );
 
 void
 libspectrum_hashtable_cleanup( void );
+
+#ifdef HAVE_STDATOMIC_H
+#include <stdatomic.h>
+
+void
+atomic_lock( atomic_char *lock_ptr );
+
+void
+atomic_unlock( atomic_char *lock_ptr );
+
+#endif				/* #ifdef HAVE_STDATOMIC_H */
+
 #endif				/* #ifndef HAVE_LIB_GLIB */
 
 #endif				/* #ifndef LIBSPECTRUM_INTERNALS_H */

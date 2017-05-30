@@ -1,4 +1,4 @@
-libspectrum 1.2.0
+libspectrum 1.3.3
 =================
 
 libspectrum is a fairly simple library designed to make the handling
@@ -276,16 +276,23 @@ the following values:
 
 LIBSPECTRUM_ID_UNKNOWN		Couldn't identify this file
 
+LIBSPECTRUM_ID_AUX_POK		A .pok poke file
+
 LIBSPECTRUM_ID_CARTRIDGE_DCK	A .dck Timex dock image
 LIBSPECTRUM_ID_CARTRIDGE_IF2	A .rom Interface 2 cartridge
 
 LIBSPECTRUM_ID_COMPRESSED_BZ2	A bzip2 compressed file
 LIBSPECTRUM_ID_COMPRESSED_GZ	A gzip compressed file
+LIBSPECTRUM_ID_COMPRESSED_ZIP	A zip compressed file
 
+LIBSPECTRUM_ID_DISK_D80		A .d80 or .d40 Didaktik 80/40 disk file
 LIBSPECTRUM_ID_DISK_DSK		A .dsk +3 disk file
 LIBSPECTRUM_ID_DISK_CPC		A plain .dsk +3 disk file
 LIBSPECTRUM_ID_DISK_ECPC	An extended .dsk +3 disk file
 LIBSPECTRUM_ID_DISK_FDI		A .fdi generic disk file
+LIBSPECTRUM_ID_DISK_IMG		A .img DISCiPLE/+D disk file
+LIBSPECTRUM_ID_DISK_MGT		A .mgt DISCiPLE/+D disk file
+LIBSPECTRUM_ID_DISK_OPD		A .opd or .opu Opus Discovery disk file
 LIBSPECTRUM_ID_DISK_SAD		A .sad generic disk file
 LIBSPECTRUM_ID_DISK_SCL		A .scl TRDOS disk file
 LIBSPECTRUM_ID_DISK_TRD		A .trd TRDOS disk file
@@ -349,10 +356,13 @@ which returns the type of file represented by the `type' parameter in
 
 LIBSPECTRUM_CLASS_UNKNOWN		An unknown file type
 
+LIBSPECTRUM_CLASS_AUXILIARY		An auxiliary file
 LIBSPECTRUM_CLASS_CARTRIDGE_TIMEX	A Timex dock cartridge
 LIBSPECTRUM_CLASS_CARTRIDGE_IF2		An Interface 2 cartridge
+LIBSPECTRUM_CLASS_DISK_DIDAKTIK	A Didaktik 80/40 disk image
 LIBSPECTRUM_CLASS_DISK_GENERIC		A generic disk image
-LIBSPECTRUM_CLASS_DISK_PLUSD		An MGT/+D disk image
+LIBSPECTRUM_CLASS_DISK_OPUS		An Opus Discovery disk image
+LIBSPECTRUM_CLASS_DISK_PLUSD		A DISCiPLE/+D disk image
 LIBSPECTRUM_CLASS_DISK_PLUS3		A +3 disk image
 LIBSPECTRUM_CLASS_DISK_TRDOS		A TRDOS disk image
 LIBSPECTRUM_CLASS_HARDDISK		An IDE hard disk image
@@ -746,6 +756,9 @@ The available properties (along with their types) are:
 * libspectrum_byte* didaktik80_rom[1];
 * size_t didaktik80_rom_length[1];
 * libspectrum_byte* didaktik80_ram[1];
+
+* int covox_active
+* libspectrum_byte covox_dac
 
 Most of those should be fairly self-explanatory; those which may not
 be are:
@@ -1867,4 +1880,28 @@ libspectrum_ide_write( libspectrum_ide_channel *chn,
 
 Write `data' to register `reg' of the IDE channel `chn'.
 
-$Id$
+Thread Safety
+=============
+
+libspectrum uses either glib or a libspectrum-supplied alternative as part of
+the implementation of several internal data structures - notably in tape and
+hard disk handling.
+
+When glib is in use, the glib documentation[1] describes the threading support
+as follows:
+
+  GLib itself is internally completely thread-safe (all global data is
+  automatically locked), but individual data structure instances are not
+  automatically locked for performance reasons. For example, you must coordinate
+  accesses to the same GHashTable from multiple threads.
+
+When the glib replacement is in use, there are two modes of thread safety:
+
+1. If the C11 header stdatomic.h is not available there is no locking of data
+    structures, and libspectrum should be considered to not be thread-safe
+    modifying any data structures
+2. If the C11 header stdatomic.h is available the global data used in allocating
+    the list and hash table data structures are locked when changes are being
+    made but individual data structure instances are not automatically locked.
+
+[1] <https://developer.gnome.org/glib/stable/glib-Threads.html>

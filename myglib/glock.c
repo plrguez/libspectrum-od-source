@@ -1,5 +1,5 @@
-/* dll.c: Visual C++ DLL entry point
-   Copyright (c) 2004 Philip Kendall
+/* glock.c: Routines for locking critical sections
+   Copyright (c) 2016 BogDan Vatra
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -17,24 +17,29 @@
 
    Author contact information:
 
-   E-mail: philip-fuse@shadowmagic.org.uk
-
+   BogDan Vatra <bogdan@kde.org>
 */
 
 #include <config.h>
 
-#include "internals.h"
+#include <stdatomic.h>
 
-BOOL APIENTRY
-DllMain( HANDLE module, DWORD reason, LPVOID opaque )
+void
+atomic_lock( atomic_char *lock_ptr )
 {
-  switch( reason ) {
-  case DLL_PROCESS_ATTACH:
-  case DLL_THREAD_ATTACH:
-  case DLL_THREAD_DETACH:
-  case DLL_PROCESS_DETACH:
-    break;
-  }
+  char locked = ATOMIC_VAR_INIT( 1 );
+  char unlocked;
+  do {
+    unlocked = ATOMIC_VAR_INIT( 0 );
+  } while( !atomic_compare_exchange_strong( lock_ptr, &unlocked, locked ) );
+}
 
-  return TRUE;
+void
+atomic_unlock( atomic_char *lock_ptr )
+{
+  char locked;
+  char unlocked = ATOMIC_VAR_INIT( 0 );
+  do {
+    locked = ATOMIC_VAR_INIT( 1 );
+  } while( !atomic_compare_exchange_strong( lock_ptr, &locked, unlocked ) );
 }

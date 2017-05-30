@@ -3,8 +3,6 @@
 # accessor.pl: generate accessor functions
 # Copyright (c) 2003-2016 Philip Kendall
 
-# $Id$
-
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -278,6 +276,10 @@ struct libspectrum_snap {
   libspectrum_byte* didaktik80_rom[1];
   size_t didaktik80_rom_length[1];
   libspectrum_byte* didaktik80_ram[1];
+
+  /* Covox status */
+  int covox_active;
+  libspectrum_byte covox_dac;
   
   /* ULAplus emulation */
   int ulaplus_active;

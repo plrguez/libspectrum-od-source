@@ -2,8 +2,6 @@
    Copyright (c) 2002 Darren Salt, Philip Kendall
    Copyright (c) 2015 Stuart Brady
 
-   $Id$
-
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -27,8 +25,6 @@
 */
 
 #include <config.h>
-
-#ifdef HAVE_ZLIB_H
 
 #include <errno.h>
 #include <stdio.h>
@@ -76,6 +72,13 @@ libspectrum_gzip_inflate( const libspectrum_byte *gzptr, size_t gzlength,
   error = skip_gzip_header( &gzptr, &gzlength ); if( error ) return error;
 
   return zlib_inflate( gzptr, gzlength, outptr, outlength, 1 );
+}
+
+libspectrum_error
+libspectrum_zip_inflate( const libspectrum_byte *zipptr, size_t ziplength,
+                         libspectrum_byte **outptr, size_t *outlength )
+{
+  return zlib_inflate( zipptr, ziplength, outptr, outlength, 1 );
 }
 
 static libspectrum_error
@@ -354,5 +357,3 @@ libspectrum_zlib_compress( const libspectrum_byte *data, size_t length,
     return LIBSPECTRUM_ERROR_LOGIC;
   }
 }
-
-#endif				/* #ifdef HAVE_ZLIB_H */

@@ -1,3 +1,68 @@
+2017-04-28  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.3.3 released.
+
+        * Silently skip PLTT blocks in SZX snapshots (thanks, windale) (Fredrick
+          Meunier and Sergio Baldoví).
+
+        * Document missing disk identifiers (Sergio Baldoví).
+
+        * Validate "used bits in last byte" field in TZX tapes (thanks, Nicholas
+          Naime and Fredrick Meunier) (Sergio Baldoví).
+
+        * Fix the load of PZX tapes with malformed strings (thanks, Nicholas
+          Naime) (Sergio Baldoví).
+
+2016-12-05  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.3.2 released.
+
+        * Make glib replacement protect global data structures against
+          modification from multiple threads (BogDan Vatra).
+
+2016-11-05  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.3.1 released.
+
+        * Change --without-gcrypt option to --without-libgcrypt (Sergio
+          Baldoví).
+
+2016-10-02  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.3.0 released.
+
+        * Fix some compilation warnings (Philip Kendall).
+
+2016-08-21  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.2.2 released.
+
+        * Support for reading zip files (Patrik Rak and Sergio Baldoví).
+
+        * Support for converting PZX data blocks with asymmetric pulses to TZX
+          GDB blocks (Fredrick Meunier).
+
+        * Various minor bug fixes/improvements:
+          * Print summary of enabled features when building libspectrum (Alberto
+            Garcia).
+          * Fix playback of TZX GDB blocks with no pilot tones (Fredrick
+            Meunier).
+          * Fix writing GDB blocks with no pilot tones (Fredrick Meunier).
+          * Fix handling of 0 length tail pulses after PZX data blocks (Fredrick
+            Meunier).
+          * TZX spec says that 0 duration pauses should have no effect on the
+            current level (Fredrick Meunier).
+          * Ensure the first PZX pulse block pulse is marked as high or low
+            level as required (Fredrick Meunier).
+
+2016-07-17  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.2.1 released.
+
+        * Add implementations of g_array_sized_new() and
+          g_array_remove_index_fast() for glib replacement (thanks, Sergio
+          Baldoví) (Philip Kendall).
+
 2016-06-06  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
         * libspectrum 1.2.0 released.
@@ -104,7 +169,15 @@
           * Remove various unused variables, initialisations etc (Fredrick
             Meunier).
 
-2008-11-30  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+2009-01-14  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+	* libspectrum 0.5.0.1 released
+
+	* Loosen signature checks for .dsk files to allow files not strictly
+	  compliant with the specification to work (Gergely Szasz; thanks,
+	  zx81 and Simon Owen).
+
+2008-12-03  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
         * libspectrum 0.5.0 released.
 
@@ -378,6 +451,4 @@
 
 	* libspectrum separated from Fuse just before the 0.5.0 release of
 	  Fuse; see Fuse's ChangeLog for changes up to this point
-
-$Id$
 

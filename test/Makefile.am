@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 ## Copyright (c) 2007,2015 Philip Kendall
 
-## $Id$
-
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
@@ -26,7 +24,7 @@ noinst_PROGRAMS += test/test
 test_test_SOURCES = \
 	test/edges.c \
 	test/test.c \
-	test/test15.c
+	test/test_edges.c
 
 test_test_CFLAGS = -DSRCDIR='"$(srcdir)"'
 
@@ -58,11 +56,13 @@ EXTRA_DIST += \
 	test/loop.tzx \
 	test/loop2.tzx \
 	test/loopend.tzx \
-        test/plus3.z80 \
+	test/no-pilot-gdb.tzx \
+	test/plus3.z80 \
 	test/sp-2000.sna.gz \
 	test/sp-ffff.sna.gz \
 	test/turbo-zeropilot.tzx \
-	test/writeprotected.mdr
+	test/writeprotected.mdr \
+	test/zero-tail.pzx
 
 CLEANFILES += \
 	test/.libs/test \

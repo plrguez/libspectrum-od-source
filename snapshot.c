@@ -1,8 +1,6 @@
 /* snapshot.c: Snapshot handling routines
    Copyright (c) 2001-2009 Philip Kendall, Darren Salt
 
-   $Id$
-
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -257,6 +255,9 @@ libspectrum_snap_alloc( void )
   libspectrum_snap_set_didaktik80_rom( snap, 0, NULL );
   libspectrum_snap_set_didaktik80_rom_length( snap, 0, 0 );
   libspectrum_snap_set_didaktik80_ram( snap, 0, NULL );
+
+  libspectrum_snap_set_covox_active( snap, 0 );
+  libspectrum_snap_set_covox_dac( snap, 0 );
 
   libspectrum_snap_set_ulaplus_active( snap, 0 );
   libspectrum_snap_set_ulaplus_palette_enabled( snap, 0 );

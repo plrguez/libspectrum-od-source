@@ -1,4 +1,4 @@
-libspectrum 1.2.0
+libspectrum 1.3.3
 =================
 
 libspectrum is a library which is designed to make the input and
@@ -44,10 +44,10 @@ For updates for libspectrum, its homepage is at:
 
 http://fuse-emulator.sourceforge.net/libspectrum.php
 
-Compiling from Subversion
--------------------------
+Compiling from Git
+------------------
 
-If you're using version of libspectrum from Subversion rather than one
+If you're using version of libspectrum from Git rather than one
 of the released tarballs, you'll need to run `autogen.sh' before
 running 'configure' for the first time.
 
@@ -58,15 +58,13 @@ To compile for the Wii, first make sure the dev tools are in your path
 (export PATH=$PATH:$DEVKITPPC/bin). Then, use this configure line:
 
 ./configure --target=powerpc-gekko --host=powerpc-gekko \
-	    --prefix=$DEVKITPPC \
-	    --without-gcrypt --with-fake-glib --without-libaudiofile
+            --prefix=$DEVKITPPC \
+            --without-libgcrypt --with-fake-glib --without-libaudiofile
 
-That is assuming you don't have gcrypt, glib and libaudiofile for the
+That is assuming you don't have libgcrypt, glib and libaudiofile for the
 Wii. At the time of writing, those haven't been ported yet.
 
 Then, type "make" and if everything went well, "make install".
 
 Philip Kendall <philip-fuse@shadowmagic.org.uk>
-6th June, 2016
-
-$Id$
+28th April, 2017

@@ -1,8 +1,6 @@
 /* szx.c: Routines for .szx snapshots
    Copyright (c) 1998-2016 Philip Kendall, Fredrick Meunier, Stuart Brady
 
-   $Id$
-
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -139,10 +137,10 @@ static const libspectrum_word ZXSTIF1F_PAGED = 4;
 #define ZXSTBID_PLUS3DISK "+3\0\0"
 #define ZXSTBID_DSKFILE "DSK\0"
 #define ZXSTBID_LEC "LEC\0"
-static const libspectrum_word ZXSTLECF_PAGED = 1;
+/* static const libspectrum_word ZXSTLECF_PAGED = 1; */
 
 #define ZXSTBID_LECRAMPAGE "LCRP"
-static const libspectrum_word ZXSTLCRPF_COMPRESSED = 1;
+/* static const libspectrum_word ZXSTLCRPF_COMPRESSED = 1; */
 
 #define ZXSTBID_TIMEXREGS "SCLD"
 
@@ -179,7 +177,7 @@ static const libspectrum_dword ZXSTPLUSDF_PAGED = 1;
 static const libspectrum_dword ZXSTPLUSDF_COMPRESSED = 2;
 static const libspectrum_dword ZXSTPLUSDF_SEEKLOWER = 4;
 static const libspectrum_byte ZXSTPDRT_GDOS = 0;
-static const libspectrum_byte ZXSTPDRT_UNIDOS = 1;
+/* static const libspectrum_byte ZXSTPDRT_UNIDOS = 1; */
 static const libspectrum_byte ZXSTPDRT_CUSTOM = 2;
 
 #define ZXSTBID_PLUSDDISK "PDSK"
@@ -193,7 +191,7 @@ static const libspectrum_dword ZXSTOPUSF_CUSTOMROM = 8;
 #define ZXSTBID_OPUSDISK "ODSK"
 
 #define ZXSTBID_SIMPLEIDE "SIDE"
-static const libspectrum_word ZXSTSIDE_ENABLED = 1;
+/* static const libspectrum_word ZXSTSIDE_ENABLED = 1; */
 
 #define ZXSTBID_DIVIDE "DIDE"
 static const libspectrum_word ZXSTDIVIDE_EPROM_WRITEPROTECT = 1;
@@ -344,6 +342,9 @@ write_dirp_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 static libspectrum_error
 write_zxpr_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 		  size_t *length, int *out_flags, libspectrum_snap *snap );
+static libspectrum_error
+write_covx_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
+		  size_t *length, libspectrum_snap *snap );
 
 static void
 write_chunk_header( libspectrum_byte **buffer, libspectrum_byte **ptr,
@@ -560,6 +561,28 @@ read_b128_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 
   /* Skip any extra data (most likely a custom ROM) */
   *buffer += data_length - 10;
+
+  return LIBSPECTRUM_ERROR_NONE;
+}
+
+static libspectrum_error
+read_covx_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
+		 const libspectrum_byte **buffer,
+		 const libspectrum_byte *end GCC_UNUSED, size_t data_length,
+		 szx_context *ctx )
+{
+  if( data_length != 4 ) {
+    libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
+			     "%s:read_covx_chunk: unknown length %lu",
+			     __FILE__, (unsigned long)data_length );
+    return LIBSPECTRUM_ERROR_UNKNOWN;
+  }
+
+  libspectrum_snap_set_covox_dac( snap, *(*buffer)++ );
+
+  libspectrum_snap_set_covox_active( snap, 1 );
+
+  *buffer += 3;			/* Skip 'reserved' data */
 
   return LIBSPECTRUM_ERROR_NONE;
 }
@@ -1039,6 +1062,8 @@ read_drum_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 		 const libspectrum_byte *end GCC_UNUSED, size_t data_length,
                  szx_context *ctx GCC_UNUSED )
 {
+  libspectrum_byte volume;
+
   if( data_length != 1 ) {
     libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
 			     "%s:read_drum_chunk: unknown length %lu",
@@ -1046,7 +1071,9 @@ read_drum_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
     return LIBSPECTRUM_ERROR_UNKNOWN;
   }
 
-  libspectrum_snap_set_specdrum_dac( snap, *(*buffer)++ );
+  volume = *(*buffer)++;
+
+  libspectrum_snap_set_specdrum_dac( snap, volume - 128 );
 
   libspectrum_snap_set_specdrum_active( snap, 1 );
 
@@ -2218,7 +2245,7 @@ static struct read_chunk_t read_chunks[] = {
   { ZXSTBID_AY,		         read_ay_chunk   },
   { ZXSTBID_BETA128,	         read_b128_chunk },
   { ZXSTBID_BETADISK,	         skip_chunk      },
-  { ZXSTBID_COVOX,	         skip_chunk      },
+  { ZXSTBID_COVOX,	         read_covx_chunk },
   { ZXSTBID_CREATOR,	         read_crtr_chunk },
   { ZXSTBID_DIVIDE,	         read_dide_chunk },
   { ZXSTBID_DIVIDERAMPAGE,       read_dirp_chunk },
@@ -2640,6 +2667,11 @@ libspectrum_szx_write( libspectrum_byte **buffer, size_t *length,
   error = write_zxpr_chunk( buffer, &ptr, length, out_flags, snap );
   if( error ) return error;
 
+  if( libspectrum_snap_covox_active( snap ) ) {
+    error = write_covx_chunk( buffer, &ptr, length, snap );
+    if( error ) return error;
+  }
+    
   if( libspectrum_snap_ulaplus_active( snap ) ) {
     error = write_pltt_chunk( buffer, &ptr, length, snap, compress );
     if( error ) return error;
@@ -3748,7 +3780,23 @@ write_drum_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 {
   write_chunk_header( buffer, ptr, length, ZXSTBID_SPECDRUM, 1 );
 
-  *(*ptr)++ = libspectrum_snap_specdrum_dac( snap );
+  *(*ptr)++ = libspectrum_snap_specdrum_dac( snap ) + 128;
+
+  return LIBSPECTRUM_ERROR_NONE;
+}
+
+static libspectrum_error
+write_covx_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
+		  size_t *length, libspectrum_snap *snap )
+{
+  write_chunk_header( buffer, ptr, length, ZXSTBID_COVOX, 4 );
+
+  *(*ptr)++ = libspectrum_snap_covox_dac( snap );
+
+  /* Write 'reserved' data */
+  *(*ptr)++ = '\0';
+  *(*ptr)++ = '\0';
+  *(*ptr)++ = '\0';
 
   return LIBSPECTRUM_ERROR_NONE;
 }

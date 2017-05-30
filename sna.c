@@ -2,8 +2,6 @@
    Copyright (c) 2001-2002 Philip Kendall
    Copyright (c) 2016 Fredrick Meunier
 
-   $Id$
-
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -346,6 +344,10 @@ libspectrum_sna_write( libspectrum_byte **buffer, size_t *length,
 
   /* We don't save the Didaktik80 state at all */
   if( libspectrum_snap_didaktik80_active( snap ) )
+    *out_flags |= LIBSPECTRUM_FLAG_SNAPSHOT_MAJOR_INFO_LOSS;
+
+  /* We don't save the Covox state at all */
+  if( libspectrum_snap_covox_active( snap ) )
     *out_flags |= LIBSPECTRUM_FLAG_SNAPSHOT_MAJOR_INFO_LOSS;
 
   ptr = *buffer;

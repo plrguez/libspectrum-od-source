@@ -1,8 +1,6 @@
 /* tape.c: Routines for handling tape files
    Copyright (c) 2001-2014 Philip Kendall, Darren Salt, Fredrick Meunier
 
-   $Id$
-
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -528,6 +526,21 @@ libspectrum_tape_get_next_edge( libspectrum_dword *tstates, int *flags,
                                                   &(tape->state) );
 }
 
+/* TZX pauses should have no edge if there is no duration, from the spec:
+   A 'Pause' block of zero duration is completely ignored, so the 'current pulse
+   level' will NOT change in this case. This also applies to 'Data' blocks that
+   have some pause duration included in them. */
+static void
+do_tail_pause( libspectrum_dword *tstates,
+               int *end_of_block, int *flags )
+{
+  *end_of_block = 1;
+  if( *tstates == 0 ) {
+    /* The tail pause is optional - if there is no tail, there is no edge */
+    *flags |= LIBSPECTRUM_TAPE_FLAGS_NO_EDGE;
+  }
+}
+
 static libspectrum_error
 rom_edge( libspectrum_tape_rom_block *block,
           libspectrum_tape_rom_block_state *state,
@@ -579,7 +592,7 @@ rom_edge( libspectrum_tape_rom_block *block,
   case LIBSPECTRUM_TAPE_STATE_PAUSE:
     /* The pause at the end of the block */
     *tstates = block->pause_tstates;
-    *end_of_block = 1;
+    do_tail_pause( tstates, end_of_block, flags );
     break;
 
   default:
@@ -676,7 +689,7 @@ turbo_edge( libspectrum_tape_turbo_block *block,
   case LIBSPECTRUM_TAPE_STATE_PAUSE:
     /* The pause at the end of the block */
     *tstates = block->pause_tstates;
-    *end_of_block = 1;
+    do_tail_pause( tstates, end_of_block, flags );
     break;
 
   default:
@@ -784,7 +797,7 @@ pure_data_edge( libspectrum_tape_pure_data_block *block,
   case LIBSPECTRUM_TAPE_STATE_PAUSE:
     /* The pause at the end of the block */
     *tstates = block->pause_tstates;
-    *end_of_block = 1;
+    do_tail_pause( tstates, end_of_block, flags );
     break;
 
   default:
@@ -857,7 +870,7 @@ raw_data_edge( libspectrum_tape_raw_data_block *block,
   case LIBSPECTRUM_TAPE_STATE_PAUSE:
     /* The pause at the end of the block */
     *tstates = block->pause_tstates;
-    *end_of_block = 1;
+    do_tail_pause( tstates, end_of_block, flags );
     break;
 
   default:
@@ -917,7 +930,7 @@ get_generalised_data_bit( libspectrum_tape_generalised_data_block *block,
   return r;
 }
 
-static libspectrum_byte
+libspectrum_byte
 get_generalised_data_symbol( libspectrum_tape_generalised_data_block *block,
                       libspectrum_tape_generalised_data_block_state *state )
 {
@@ -1017,7 +1030,7 @@ generalised_data_edge( libspectrum_tape_generalised_data_block *block,
   case LIBSPECTRUM_TAPE_STATE_PAUSE:
     /* The pause at the end of the block */
     *tstates = block->pause_tstates;
-    *end_of_block = 1;
+    do_tail_pause( tstates, end_of_block, flags );
     break;
 
   default:
@@ -1185,7 +1198,7 @@ data_block_edge( libspectrum_tape_data_block *block,
   case LIBSPECTRUM_TAPE_STATE_TAIL:
     /* The pulse at the end of the block */
     *tstates = block->tail_length;
-    *end_of_block = 1;
+    do_tail_pause( tstates, end_of_block, flags );
     break;
 
   default:
@@ -1196,9 +1209,11 @@ data_block_edge( libspectrum_tape_data_block *block,
 
   }
 
-  *flags |= state->level ? LIBSPECTRUM_TAPE_FLAGS_LEVEL_HIGH :
-                           LIBSPECTRUM_TAPE_FLAGS_LEVEL_LOW;
-  state->level = !state->level;
+  if( !(*flags & LIBSPECTRUM_TAPE_FLAGS_NO_EDGE )) {
+    *flags |= state->level ? LIBSPECTRUM_TAPE_FLAGS_LEVEL_HIGH :
+                             LIBSPECTRUM_TAPE_FLAGS_LEVEL_LOW;
+    state->level = !state->level;
+  }
 
   return LIBSPECTRUM_ERROR_NONE;
 }

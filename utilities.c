@@ -1,8 +1,6 @@
 /* utilities.c: miscellaneous utility routines
    Copyright (c) 2011 Philip Kendall
 
-   $Id$
-
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -59,4 +57,10 @@ libspectrum_set_pause_tstates( libspectrum_tape_block *block,
   libspectrum_tape_block_set_pause_tstates( block, pause_tstates );
   libspectrum_tape_block_set_pause( block,
                                   libspectrum_tstates_to_ms( pause_tstates ) );
+}
+
+size_t
+libspectrum_bits_to_bytes( size_t bits )
+{
+  return ( bits + LIBSPECTRUM_BITS_IN_BYTE - 1 ) / LIBSPECTRUM_BITS_IN_BYTE;
 }
