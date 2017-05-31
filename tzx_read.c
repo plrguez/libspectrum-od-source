@@ -331,14 +331,6 @@ tzx_read_turbo_block( libspectrum_tape *tape, const libspectrum_byte **ptr,
   (*ptr) += 2;
 
   bits_in_last_byte = **ptr;
-  if( bits_in_last_byte == 0 || bits_in_last_byte > 8 ) {
-    libspectrum_free( block );
-    libspectrum_print_error( LIBSPECTRUM_ERROR_CORRUPT,
-    "tzx_read_turbo_block: corrupt file, bad value in used bits in last byte" );
-    return LIBSPECTRUM_ERROR_CORRUPT;
-  }
-
-  libspectrum_tape_block_set_bits_in_last_byte( block, bits_in_last_byte );
   (*ptr)++;
 
   libspectrum_set_pause_ms               ( block,
@@ -348,6 +340,18 @@ tzx_read_turbo_block( libspectrum_tape *tape, const libspectrum_byte **ptr,
   /* Read the data in */
   error = tzx_read_data( ptr, end, &length, 3, &data );
   if( error ) { libspectrum_free( block ); return error; }
+
+  if( bits_in_last_byte == 0 && length >= 1 ) {
+    bits_in_last_byte = 8;
+    length -= 1;
+  }
+
+  if( bits_in_last_byte > 8 ) {
+    bits_in_last_byte = 8;
+  }
+
+  libspectrum_tape_block_set_bits_in_last_byte( block, bits_in_last_byte );
+
   libspectrum_tape_block_set_data_length( block, length );
   libspectrum_tape_block_set_data( block, data );
 
@@ -458,14 +462,6 @@ tzx_read_pure_data( libspectrum_tape *tape, const libspectrum_byte **ptr,
   (*ptr) += 2;
 
   bits_in_last_byte = **ptr;
-  if( bits_in_last_byte == 0 || bits_in_last_byte > 8 ) {
-    libspectrum_free( block );
-    libspectrum_print_error( LIBSPECTRUM_ERROR_CORRUPT,
-      "tzx_read_pure_data: corrupt file, bad value in used bits in last byte" );
-    return LIBSPECTRUM_ERROR_CORRUPT;
-  }
-
-  libspectrum_tape_block_set_bits_in_last_byte( block, bits_in_last_byte );
   (*ptr)++;
 
   libspectrum_set_pause_ms( block, (*ptr)[0] + (*ptr)[1] * 0x100 );
@@ -474,6 +470,17 @@ tzx_read_pure_data( libspectrum_tape *tape, const libspectrum_byte **ptr,
   /* And the actual data */
   error = tzx_read_data( ptr, end, &length, 3, &data );
   if( error ) { libspectrum_free( block ); return error; }
+
+  if( bits_in_last_byte == 0 && length > 1 ) {
+    bits_in_last_byte = 8;
+    length -= 1;
+  }
+
+  if( bits_in_last_byte > 8 ) {
+    bits_in_last_byte = 8;
+  }
+
+  libspectrum_tape_block_set_bits_in_last_byte( block, bits_in_last_byte );
   libspectrum_tape_block_set_data_length( block, length );
   libspectrum_tape_block_set_data( block, data );
 
@@ -506,19 +513,22 @@ tzx_read_raw_data (libspectrum_tape *tape, const libspectrum_byte **ptr,
   libspectrum_set_pause_ms( block, (*ptr)[2] + (*ptr)[3] * 0x100 );
 
   bits_in_last_byte = (*ptr)[4];
-  if( bits_in_last_byte == 0 || bits_in_last_byte > 8 ) {
-    libspectrum_free( block );
-    libspectrum_print_error( LIBSPECTRUM_ERROR_CORRUPT,
-      "tzx_read_raw_data: corrupt file, bad value in used bits in last byte" );
-    return LIBSPECTRUM_ERROR_CORRUPT;
-  }
-
-  libspectrum_tape_block_set_bits_in_last_byte( block, bits_in_last_byte );
   (*ptr) += 5;
 
   /* And the actual data */
   error = tzx_read_data( ptr, end, &length, 3, &data );
   if( error ) { libspectrum_free( block ); return error; }
+
+  if( bits_in_last_byte == 0 && length >= 1 ) {
+    bits_in_last_byte = 8;
+    length -= 1;
+  }
+
+  if( bits_in_last_byte > 8 ) {
+    bits_in_last_byte = 8;
+  }
+
+  libspectrum_tape_block_set_bits_in_last_byte( block, bits_in_last_byte );
   libspectrum_tape_block_set_data_length( block, length );
   libspectrum_tape_block_set_data( block, data );
 
