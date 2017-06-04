@@ -235,7 +235,7 @@ csw_write_body( libspectrum_byte **buffer, size_t *length,
   libspectrum_dword pulse_tstates = 0;
   libspectrum_dword balance_tstates = 0;
   libspectrum_byte *data = NULL;
-  size_t data_size;
+  size_t data_size = 0;
   size_t data_length = 0;
   libspectrum_byte *data_ptr = data;
   long scale = 3500000/sample_rate;
