@@ -88,6 +88,15 @@ static const libspectrum_byte ZXSTAYF_FULLERBOX = 1;
 static const libspectrum_byte ZXSTAYF_128AY = 2;
 
 #define ZXSTBID_MULTIFACE "MFCE"
+static const libspectrum_byte ZXSTMF_PAGEDIN = 1;
+static const libspectrum_byte ZXSTMF_COMPRESSED = 2;
+static const libspectrum_byte ZXSTMF_SOFTWARELOCKOUT = 4;
+static const libspectrum_byte ZXSTMF_REDBUTTONDISABLED = 8;
+static const libspectrum_byte ZXSTMF_DISABLED = 16;
+static const libspectrum_byte ZXSTMF_16KRAMMODE = 32;
+static const libspectrum_byte ZXSTMFM_1 = 0;
+static const libspectrum_byte ZXSTMFM_128 = 1;
+
 #define ZXSTBID_USPEECH "USPE"
 #define ZXSTBID_SPECDRUM "DRUM"
 #define ZXSTBID_ZXTAPE "TAPE"
@@ -313,6 +322,9 @@ write_snef_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 		  size_t *length, libspectrum_snap *snap, int compress );
 static libspectrum_error
 write_sner_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
+		  size_t *length, libspectrum_snap *snap, int compress );
+static libspectrum_error
+write_mfce_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 		  size_t *length, libspectrum_snap *snap, int compress );
 
 #ifdef HAVE_ZLIB_H
@@ -2181,6 +2193,115 @@ read_sner_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 }
 
 static libspectrum_error
+read_mfce_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
+                 const libspectrum_byte **buffer,
+                 const libspectrum_byte *end GCC_UNUSED, size_t data_length,
+                 szx_context *ctx GCC_UNUSED )
+{
+#ifdef HAVE_ZLIB_H
+  libspectrum_error error;
+#endif
+  libspectrum_byte *ram_data = NULL;
+  libspectrum_byte multiface_model;
+  libspectrum_byte flags;
+  int capabilities;
+  size_t expected_ram_length, disc_ram_length;
+
+  if( data_length < 2 ) {
+    libspectrum_print_error(
+      LIBSPECTRUM_ERROR_UNKNOWN,
+      "read_mfce_chunk: length %lu too short", (unsigned long)data_length
+    );
+    return LIBSPECTRUM_ERROR_UNKNOWN;
+  }
+
+  libspectrum_snap_set_multiface_active( snap, 1 );
+
+  multiface_model = **buffer; (*buffer)++;
+
+  if( multiface_model == ZXSTMFM_1 )
+    libspectrum_snap_set_multiface_model_one( snap, 1 );
+  else if ( multiface_model == ZXSTMFM_128 ) {
+    capabilities =
+      libspectrum_machine_capabilities( libspectrum_snap_machine( snap ) );
+
+    if( capabilities & LIBSPECTRUM_MACHINE_CAPABILITY_PLUS3_MEMORY )
+      libspectrum_snap_set_multiface_model_3( snap, 1 );
+    else
+      libspectrum_snap_set_multiface_model_128( snap, 1 );
+  }
+
+  flags = **buffer; (*buffer)++;
+  libspectrum_snap_set_multiface_paged( snap, !!( flags & ZXSTMF_PAGEDIN ) );
+  libspectrum_snap_set_multiface_software_lockout( snap,
+    !!( flags & ZXSTMF_SOFTWARELOCKOUT ) );
+  libspectrum_snap_set_multiface_red_button_disabled( snap,
+    !!( flags & ZXSTMF_REDBUTTONDISABLED ) );
+  libspectrum_snap_set_multiface_disabled( snap,
+    !!( flags & ZXSTMF_DISABLED ) );
+
+  expected_ram_length = flags & ZXSTMF_16KRAMMODE ? 0x4000 : 0x2000;
+  disc_ram_length = data_length - 2;
+
+  if( flags & ZXSTMF_COMPRESSED ) {
+
+#ifdef HAVE_ZLIB_H
+
+    size_t uncompressed_length = 0;
+
+    error = libspectrum_zlib_inflate( *buffer, disc_ram_length, &ram_data,
+                                      &uncompressed_length );
+    if( error ) return error;
+
+    if( uncompressed_length != expected_ram_length ) {
+      libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
+                               "%s:read_mfce_chunk: invalid RAM length "
+                               "in compressed file, should be %lu, file "
+                               "has %lu",
+                               __FILE__,
+                               (unsigned long)expected_ram_length,
+                               (unsigned long)uncompressed_length );
+      return LIBSPECTRUM_ERROR_UNKNOWN;
+    }
+
+    *buffer += disc_ram_length;
+
+#else			/* #ifdef HAVE_ZLIB_H */
+
+    libspectrum_print_error(
+      LIBSPECTRUM_ERROR_UNKNOWN,
+      "%s:read_mfce_chunk: zlib needed for decompression\n",
+      __FILE__
+    );
+    return LIBSPECTRUM_ERROR_UNKNOWN;
+
+#endif			/* #ifdef HAVE_ZLIB_H */
+
+  } else {
+
+    if( disc_ram_length != expected_ram_length ) {
+      libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
+                               "%s:read_mfce_chunk: invalid RAM length "
+                               "in uncompressed file, should be %lu, file "
+                               "has %lu",
+                               __FILE__,
+                               (unsigned long)expected_ram_length,
+                               (unsigned long)disc_ram_length );
+      return LIBSPECTRUM_ERROR_UNKNOWN;
+    }
+
+    ram_data = libspectrum_new( libspectrum_byte, expected_ram_length );
+    memcpy( ram_data, *buffer, expected_ram_length );
+    *buffer += expected_ram_length;
+  }
+
+  libspectrum_snap_set_multiface_ram( snap, 0, ram_data );
+  libspectrum_snap_set_multiface_ram_length( snap, 0, expected_ram_length );
+
+  return LIBSPECTRUM_ERROR_NONE;
+}
+
+static libspectrum_error
 skip_chunk( libspectrum_snap *snap GCC_UNUSED,
 	    libspectrum_word version GCC_UNUSED,
 	    const libspectrum_byte **buffer,
@@ -2220,7 +2341,7 @@ static struct read_chunk_t read_chunks[] = {
   { ZXSTBID_KEYBOARD,	         read_keyb_chunk },
   { ZXSTBID_MICRODRIVE,	         skip_chunk      },
   { ZXSTBID_MOUSE,	         read_amxm_chunk },
-  { ZXSTBID_MULTIFACE,	         skip_chunk      },
+  { ZXSTBID_MULTIFACE,	         read_mfce_chunk },
   { ZXSTBID_OPUS,	         read_opus_chunk },
   { ZXSTBID_OPUSDISK,	         skip_chunk      },
   { ZXSTBID_PALETTE,	         skip_chunk      },
@@ -2628,6 +2749,11 @@ libspectrum_szx_write( libspectrum_byte **buffer, size_t *length,
 
   if( libspectrum_snap_covox_active( snap ) ) {
     error = write_covx_chunk( buffer, &ptr, length, snap );
+    if( error ) return error;
+  }
+
+  if( libspectrum_snap_multiface_active( snap ) ) {
+    error = write_mfce_chunk( buffer, &ptr, length, snap, compress );
     if( error ) return error;
   }
 
@@ -3983,6 +4109,74 @@ write_sner_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
 
   if( ram_compressed )
     libspectrum_free( compressed_ram_data );
+
+  return LIBSPECTRUM_ERROR_NONE;
+}
+
+static libspectrum_error
+write_mfce_chunk( libspectrum_byte **buffer, libspectrum_byte **ptr,
+                  size_t *length, libspectrum_snap *snap, int compress )
+{
+#ifdef HAVE_ZLIB_H
+  libspectrum_error error;
+#endif
+  libspectrum_byte *ram_data;
+  libspectrum_byte *compressed_ram_data = NULL;
+  size_t disk_ram_length, block_size;
+  libspectrum_byte flags = 0;
+  libspectrum_byte model;
+  int use_compression = 0;
+
+  ram_data = libspectrum_snap_multiface_ram( snap, 0 );
+  disk_ram_length = libspectrum_snap_multiface_ram_length( snap, 0 );
+
+  compressed_ram_data = NULL;
+
+#ifdef HAVE_ZLIB_H
+
+  if( compress ) {
+
+    size_t compressed_ram_length;
+
+    error = libspectrum_zlib_compress( ram_data, disk_ram_length,
+                                       &compressed_ram_data,
+                                       &compressed_ram_length );
+    if( error ) return error;
+
+    if( compress & LIBSPECTRUM_FLAG_SNAPSHOT_ALWAYS_COMPRESS ||
+        compressed_ram_length < disk_ram_length ) {
+      use_compression = 1;
+      ram_data = compressed_ram_data;
+      disk_ram_length = compressed_ram_length;
+    }
+
+  }
+
+#endif				/* #ifdef HAVE_ZLIB_H */
+
+  block_size = 2 + disk_ram_length;
+
+  write_chunk_header( buffer, ptr, length, ZXSTBID_MULTIFACE, block_size );
+
+  if( libspectrum_snap_multiface_model_one( snap ) )
+    model = ZXSTMFM_1;
+  else
+    model = ZXSTMFM_128;
+  *(*ptr)++ = model;
+
+  if( libspectrum_snap_multiface_paged( snap ) ) flags |= ZXSTMF_PAGEDIN;
+  if( use_compression ) flags |= ZXSTMF_COMPRESSED;
+  if( libspectrum_snap_multiface_software_lockout( snap ) )
+    flags |= ZXSTMF_SOFTWARELOCKOUT;
+  if( libspectrum_snap_multiface_red_button_disabled( snap ) )
+    flags |= ZXSTMF_REDBUTTONDISABLED;
+  if( libspectrum_snap_multiface_disabled( snap ) ) flags |= ZXSTMF_DISABLED;
+  if( disk_ram_length == 0x4000 ) flags |= ZXSTMF_16KRAMMODE;
+  *(*ptr)++ = flags;
+
+  memcpy( *ptr, ram_data, disk_ram_length ); *ptr += disk_ram_length;
+
+  if( compressed_ram_data ) libspectrum_free( compressed_ram_data );
 
   return LIBSPECTRUM_ERROR_NONE;
 }
