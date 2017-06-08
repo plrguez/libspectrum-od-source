@@ -123,7 +123,7 @@ read_snap( const char *filename, const char *filename_to_pass,
 
   libspectrum_free( buffer );
 
-  if( libspectrum_snap_free( snap ) ) return TEST_INCOMPLETE;
+  libspectrum_snap_free( snap );
 
   return TEST_PASS;
 }

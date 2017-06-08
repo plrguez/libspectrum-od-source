@@ -26,6 +26,7 @@ ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libspectrum.la
 
 libspectrum_la_SOURCES = bzip2.c \
+			 buffer.c \
 			 creator.c \
 			 crypto.c \
 			 csw.c \
