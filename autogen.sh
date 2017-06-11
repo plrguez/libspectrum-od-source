@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # autogen.sh: autotools invocation
-# Copyright (c) 2004-2014 Philip Kendall, Sergio Baldoví
+# Copyright (c) 2004-2017 Philip Kendall, Sergio Baldoví
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,11 +24,4 @@
 # Exit on errors
 set -e
 
-aclocal -I m4
-autoheader
-# Mac OS X: Use glibtoolize instead
-(glibtoolize --version) < /dev/null > /dev/null 2>&1 && LIBTOOLIZE=glibtoolize \
-  || LIBTOOLIZE=libtoolize
-$LIBTOOLIZE --automake
-automake --add-missing
-autoconf
+autoreconf -f -i -I m4

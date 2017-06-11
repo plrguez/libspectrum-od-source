@@ -123,7 +123,7 @@ read_snap( const char *filename, const char *filename_to_pass,
 
   libspectrum_free( buffer );
 
-  if( libspectrum_snap_free( snap ) ) return TEST_INCOMPLETE;
+  libspectrum_snap_free( snap );
 
   return TEST_PASS;
 }
@@ -731,6 +731,34 @@ test_27( void )
   return r;
 }
 
+/* Test for bug #379: converting .tap file to .csw causes crash */
+static test_return_t
+test_30( void )
+{
+  libspectrum_byte *buffer = NULL;
+  size_t length = 0;
+  libspectrum_tape *tape;
+  const char *filename = DYNAMIC_TEST_PATH( "standard-tap.tap" );
+  test_return_t r;
+
+  r = load_tape( &tape, filename, LIBSPECTRUM_ERROR_NONE );
+  if( r ) return r;
+
+  if( libspectrum_tape_write( &buffer, &length, tape,
+                              LIBSPECTRUM_ID_TAPE_CSW ) ) {
+    fprintf( stderr, "%s: writing `%s' to a .csw file was not successful\n",
+             progname, filename );
+    libspectrum_tape_free( tape );
+    return TEST_INCOMPLETE;
+  }
+
+  libspectrum_free( buffer );
+
+  if( libspectrum_tape_free( tape ) ) return TEST_INCOMPLETE;
+
+  return TEST_PASS;
+}
+
 struct test_description {
 
   test_fn test;
@@ -769,6 +797,7 @@ static struct test_description tests[] = {
   { test_27, "Reading old SZX file", 0 },
   { test_28, "Zero tail length PZX file", 0 },
   { test_29, "No pilot pulse GDB TZX file", 0 },
+  { test_30, "CSW conversion", 0 },
 };
 
 static size_t test_count = ARRAY_SIZE( tests );
