@@ -306,8 +306,7 @@ typedef struct libspectrum_buffer libspectrum_buffer;
 WIN32_DLL libspectrum_buffer*
 libspectrum_buffer_alloc( void );
 WIN32_DLL void
-libspectrum_buffer_reallocate( libspectrum_buffer *buffer,
-                               const size_t new_size );
+libspectrum_buffer_reallocate( libspectrum_buffer *buffer, size_t new_size );
 WIN32_DLL void
 libspectrum_buffer_free( libspectrum_buffer *buffer );
 
@@ -324,7 +323,7 @@ libspectrum_buffer_write_word( libspectrum_buffer *buffer,
                                libspectrum_word data );
 WIN32_DLL void
 libspectrum_buffer_write_dword( libspectrum_buffer *buffer,
-                                const libspectrum_dword data );
+                                libspectrum_dword data );
 WIN32_DLL void
 libspectrum_buffer_write_buffer( libspectrum_buffer *dest,
                                  const libspectrum_buffer *src );
