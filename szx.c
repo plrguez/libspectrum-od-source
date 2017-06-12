@@ -2784,7 +2784,7 @@ write_file_header( libspectrum_buffer *buffer, int *out_flags,
   case LIBSPECTRUM_MACHINE_PENT512: flags = SZX_MACHINE_PENTAGON512; break;
   case LIBSPECTRUM_MACHINE_PENT1024: flags = SZX_MACHINE_PENTAGON1024; break;
 
-  case LIBSPECTRUM_MACHINE_UNKNOWN:
+  default:
     libspectrum_print_error( LIBSPECTRUM_ERROR_LOGIC,
 			     "Emulated machine type is set to 'unknown'!" );
     return LIBSPECTRUM_ERROR_LOGIC;

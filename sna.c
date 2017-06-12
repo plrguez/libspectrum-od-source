@@ -383,9 +383,10 @@ libspectrum_sna_write( libspectrum_buffer *buffer, int *out_flags,
     write_128k_sna( buffer_mem, snap );
     break;
 
-  case LIBSPECTRUM_MACHINE_UNKNOWN:
+  default:
     libspectrum_print_error( LIBSPECTRUM_ERROR_LOGIC,
 			     "Emulated machine type is set to 'unknown'!" );
+    libspectrum_buffer_free( buffer_mem );
     return LIBSPECTRUM_ERROR_LOGIC;
   }
 
