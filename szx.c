@@ -3495,7 +3495,6 @@ write_plsd_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
 {
   libspectrum_byte *rom_data, *ram_data; 
   libspectrum_buffer *rom_buffer, *ram_buffer;
-  libspectrum_byte *compressed_rom_data = NULL, *compressed_ram_data = NULL;
   size_t disk_rom_length, disk_ram_length;
   libspectrum_dword flags = 0;
   int rom_compression = 0, ram_compression = 0;
@@ -3510,8 +3509,6 @@ write_plsd_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
   disk_rom_length = 0x2000;
   ram_data = libspectrum_snap_plusd_ram( snap, 0 );
   disk_ram_length = 0x2000;
-
-  compressed_ram_data = compressed_rom_data = NULL;
 
   rom_buffer = libspectrum_buffer_alloc();
   rom_compression = compress_data( rom_buffer, rom_data, disk_rom_length,
