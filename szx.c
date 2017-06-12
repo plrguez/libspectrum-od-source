@@ -496,8 +496,8 @@ read_b128_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 
   flags = libspectrum_read_dword( buffer );
   libspectrum_snap_set_beta_active( snap, 1 );
-  libspectrum_snap_set_beta_paged( snap, flags & ZXSTBETAF_PAGED );
-  libspectrum_snap_set_beta_autoboot( snap, flags & ZXSTBETAF_AUTOBOOT );
+  libspectrum_snap_set_beta_paged( snap, !!( flags & ZXSTBETAF_PAGED ) );
+  libspectrum_snap_set_beta_autoboot( snap, !!( flags & ZXSTBETAF_AUTOBOOT ) );
   libspectrum_snap_set_beta_direction( snap,
 				       !( flags & ZXSTBETAF_SEEKLOWER ) );
 
@@ -671,7 +671,8 @@ read_opus_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
   disc_ram_length = libspectrum_read_dword( buffer );
   disc_rom_length = libspectrum_read_dword( buffer );
 
-  libspectrum_snap_set_opus_custom_rom( snap, flags & ZXSTOPUSF_CUSTOMROM );
+  libspectrum_snap_set_opus_custom_rom( snap,
+                                        !!( flags & ZXSTOPUSF_CUSTOMROM ) );
   if( libspectrum_snap_opus_custom_rom( snap ) && !disc_rom_length ) {
     libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
 			     "szx_read_opus_chunk: block flagged as custom "
@@ -1217,7 +1218,7 @@ read_keyb_chunk( libspectrum_snap *snap, libspectrum_word version,
   }
 
   flags = libspectrum_read_dword( buffer );
-  libspectrum_snap_set_issue2( snap, flags & ZXSTKF_ISSUE2 );
+  libspectrum_snap_set_issue2( snap, !!( flags & ZXSTKF_ISSUE2 ) );
 
   if( expected_length >= 5 ) {
     switch( **buffer ) {
@@ -1472,7 +1473,7 @@ read_zxat_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
   flags = libspectrum_read_word( buffer );
   libspectrum_snap_set_zxatasp_upload( snap, flags & ZXSTZXATF_UPLOAD );
   libspectrum_snap_set_zxatasp_writeprotect( snap,
-					     flags & ZXSTZXATF_WRITEPROTECT );
+    !!( flags & ZXSTZXATF_WRITEPROTECT ) );
 
   libspectrum_snap_set_zxatasp_port_a( snap, **buffer ); (*buffer)++;
   libspectrum_snap_set_zxatasp_port_b( snap, **buffer ); (*buffer)++;
@@ -1536,7 +1537,7 @@ read_if1_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 
   libspectrum_snap_set_interface1_active( snap, flags & ZXSTIF1F_ENABLED );
 
-  libspectrum_snap_set_interface1_paged( snap, flags & ZXSTIF1F_PAGED );
+  libspectrum_snap_set_interface1_paged( snap, !!( flags & ZXSTIF1F_PAGED ) );
 
   if( expected_length ) {
     if( expected_length != 0x2000 && expected_length != 0x4000 ) {
@@ -2101,16 +2102,21 @@ read_snet_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
   libspectrum_snap_set_spectranet_active( snap, 1 );
 
   flags = libspectrum_read_word( buffer );
-  libspectrum_snap_set_spectranet_paged( snap, flags & ZXSTSNET_PAGED );
-  libspectrum_snap_set_spectranet_paged_via_io( snap, flags & ZXSTSNET_PAGED_VIA_IO );
+  libspectrum_snap_set_spectranet_paged( snap, !!( flags & ZXSTSNET_PAGED ) );
+  libspectrum_snap_set_spectranet_paged_via_io( snap,
+    !!( flags & ZXSTSNET_PAGED_VIA_IO ) );
   libspectrum_snap_set_spectranet_programmable_trap_active( snap,
-    flags & ZXSTSNET_PROGRAMMABLE_TRAP_ACTIVE );
+    !!( flags & ZXSTSNET_PROGRAMMABLE_TRAP_ACTIVE ) );
   libspectrum_snap_set_spectranet_programmable_trap_msb( snap,
-    flags & ZXSTSNET_PROGRAMMABLE_TRAP_MSB );
-  libspectrum_snap_set_spectranet_all_traps_disabled( snap, flags & ZXSTSNET_ALL_DISABLED );
-  libspectrum_snap_set_spectranet_rst8_trap_disabled( snap, flags & ZXSTSNET_RST8_DISABLED );
-  libspectrum_snap_set_spectranet_deny_downstream_a15( snap, flags & ZXSTSNET_DENY_DOWNSTREAM_A15 );
-  libspectrum_snap_set_spectranet_nmi_flipflop( snap, flags & ZXSTSNET_NMI_FLIPFLOP );
+    !!( flags & ZXSTSNET_PROGRAMMABLE_TRAP_MSB ) );
+  libspectrum_snap_set_spectranet_all_traps_disabled( snap,
+    !!( flags & ZXSTSNET_ALL_DISABLED ) );
+  libspectrum_snap_set_spectranet_rst8_trap_disabled( snap,
+    !!( flags & ZXSTSNET_RST8_DISABLED ) );
+  libspectrum_snap_set_spectranet_deny_downstream_a15( snap,
+    !!( flags & ZXSTSNET_DENY_DOWNSTREAM_A15 ) );
+  libspectrum_snap_set_spectranet_nmi_flipflop( snap,
+    !!( flags & ZXSTSNET_NMI_FLIPFLOP ) );
 
   libspectrum_snap_set_spectranet_page_a( snap, **buffer ); (*buffer)++;
   libspectrum_snap_set_spectranet_page_b( snap, **buffer ); (*buffer)++;
