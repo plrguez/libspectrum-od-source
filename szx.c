@@ -755,7 +755,7 @@ read_opus_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
                                  "has %lu",
                                  __FILE__, 
                                  (unsigned long)expected_length,
-                                 (unsigned long)disc_rom_length );
+                                 (unsigned long)uncompressed_length );
         return LIBSPECTRUM_ERROR_UNKNOWN;
       }
 
@@ -782,7 +782,7 @@ read_opus_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
                                "has %lu",
 			       __FILE__, 
                                (unsigned long)expected_length,
-                               (unsigned long)disc_rom_length );
+                               (unsigned long)disc_ram_length );
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
@@ -944,7 +944,7 @@ read_plsd_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
                                  "has %lu",
                                  __FILE__, 
                                  (unsigned long)expected_length,
-                                 (unsigned long)disc_rom_length );
+                                 (unsigned long)uncompressed_length );
         return LIBSPECTRUM_ERROR_UNKNOWN;
       }
 
@@ -971,7 +971,7 @@ read_plsd_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
                                "has %lu",
 			       __FILE__, 
                                (unsigned long)expected_length,
-                               (unsigned long)disc_rom_length );
+                               (unsigned long)disc_ram_length );
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
