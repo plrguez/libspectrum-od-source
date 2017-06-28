@@ -75,7 +75,7 @@ libspectrum_creator_program( libspectrum_creator *creator )
 }
 
 libspectrum_error libspectrum_creator_set_major( libspectrum_creator *creator,
-						 libspectrum_word major )
+                                                 libspectrum_word major )
 {
   creator->major = major;
   return LIBSPECTRUM_ERROR_NONE;
@@ -88,7 +88,7 @@ libspectrum_creator_major( libspectrum_creator *creator )
 }
 
 libspectrum_error libspectrum_creator_set_minor( libspectrum_creator *creator,
-						 libspectrum_word minor )
+                                                 libspectrum_word minor )
 {
   creator->minor = minor;
   return LIBSPECTRUM_ERROR_NONE;

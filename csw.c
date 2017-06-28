@@ -215,7 +215,7 @@ find_sample_rate( libspectrum_tape *tape )
     default:
       libspectrum_print_error(
         LIBSPECTRUM_ERROR_LOGIC,
-        "libspectrum_csw_write: unknown block type 0x%02x",
+        "find_sample_rate: unknown block type 0x%02x",
 	libspectrum_tape_block_type( block )
       );
 
@@ -226,23 +226,16 @@ find_sample_rate( libspectrum_tape *tape )
 }
 
 static libspectrum_error
-csw_write_body( libspectrum_byte **buffer, size_t *length,
-                libspectrum_tape *tape, libspectrum_dword sample_rate,
-                size_t length_offset, libspectrum_byte *ptr )
+csw_write_body( libspectrum_buffer *buffer, libspectrum_tape *tape,
+                libspectrum_dword sample_rate,
+                size_t* body_uncompressed_length )
 {
   libspectrum_error error;
   int flags = 0;
   libspectrum_dword pulse_tstates = 0;
   libspectrum_dword balance_tstates = 0;
-  libspectrum_byte *data = NULL;
-  size_t data_size;
-  size_t data_length = 0;
-  libspectrum_byte *data_ptr = data;
   long scale = 3500000/sample_rate;
   libspectrum_tape_block_state it;
-  libspectrum_byte *length_ptr; 
-
-  libspectrum_make_room( &data, 8192, &data_ptr, &data_size );
 
   if( libspectrum_tape_block_internal_init( &it, tape ) ) {
     while( !(flags & LIBSPECTRUM_TAPE_FLAGS_STOP) ) {
@@ -263,100 +256,89 @@ csw_write_body( libspectrum_byte **buffer, size_t *length,
       balance_tstates = balance_tstates % scale;
 
       if( pulse_length ) {
-        if( data_size < (data_length + 1 + sizeof(libspectrum_dword) ) )
-          libspectrum_make_room( &data, data_size*2, &data_ptr, &data_size );
-          
         if( pulse_length <= 0xff ) {
-          *data_ptr++ = pulse_length;
-          data_length++;
+          libspectrum_buffer_write_byte( buffer, pulse_length );
         } else {
-          *data_ptr++ = 0;
-          data_length++;
-          libspectrum_write_dword( &data_ptr, pulse_length );
-          data_length+=sizeof(libspectrum_dword);
+          libspectrum_buffer_write_byte( buffer, 0 );
+          libspectrum_buffer_write_dword( buffer, pulse_length );
         }
       }
     }
   }
 
   /* Write the length in */
-  length_ptr = *buffer + length_offset;
-  libspectrum_write_dword( &length_ptr, data_length );
+  *body_uncompressed_length = libspectrum_buffer_get_data_size( buffer );
 
   /* compression type */
 #ifdef HAVE_ZLIB_H
-  if( data_length ) {
+  if( *body_uncompressed_length ) {
     libspectrum_byte *compressed_data = NULL;
     size_t compressed_length;
 
-    error = libspectrum_zlib_compress( data, data_length,
+    error = libspectrum_zlib_compress( libspectrum_buffer_get_data( buffer ),
+                                       libspectrum_buffer_get_data_size( buffer ),
                                        &compressed_data, &compressed_length );
-    libspectrum_free( data );
     if( error ) return error;
 
-    data = compressed_data;
-    data_length = compressed_length;
+    libspectrum_buffer_clear( buffer );
+    libspectrum_buffer_write( buffer, compressed_data, compressed_length );
+    libspectrum_free( compressed_data );
   }
 #endif
-
-  if( data_length ) {
-    libspectrum_make_room( buffer, data_length, &ptr, length );
-    memcpy( ptr, data, data_length ); ptr += data_length;
-    libspectrum_free( data );
-  }
 
   return LIBSPECTRUM_ERROR_NONE;
 }
 
 libspectrum_error
-libspectrum_csw_write( libspectrum_byte **buffer, size_t *length,
-		       libspectrum_tape *tape )
+libspectrum_csw_write( libspectrum_buffer *new_buffer, libspectrum_tape *tape )
 {
-  libspectrum_error error;
+  libspectrum_error error = LIBSPECTRUM_ERROR_NONE;
   libspectrum_dword sample_rate;
-  size_t length_offset;
+  size_t i;
 
-  libspectrum_byte *ptr = *buffer;
+  libspectrum_buffer* body_buffer = libspectrum_buffer_alloc();
+  size_t body_uncompressed_length = 0;
 
-  size_t signature_length = strlen( csw_signature );
+  sample_rate = find_sample_rate( tape );
+
+  error =
+    csw_write_body( body_buffer, tape, sample_rate, &body_uncompressed_length );
+  if( error != LIBSPECTRUM_ERROR_NONE ) goto exit;
 
   /* First, write the .csw signature and the rest of the header */
-  libspectrum_make_room( buffer, signature_length + 29, &ptr, length );
+  libspectrum_buffer_write( new_buffer, csw_signature, strlen( csw_signature ) );
 
-  memcpy( ptr, csw_signature, signature_length );
-  ptr += signature_length;
-
-  *ptr++ = 2;		/* Major version number */
-  *ptr++ = 0;		/* Minor version number */
+  libspectrum_buffer_write_byte( new_buffer, 2 ); /* Major version number */
+  libspectrum_buffer_write_byte( new_buffer, 0 ); /* Minor version number */
 
   /* sample rate */
-  sample_rate = find_sample_rate( tape );
-  libspectrum_write_dword( &ptr, sample_rate );
+  libspectrum_buffer_write_dword( new_buffer, sample_rate );
 
   /* Store where the total number of pulses (after decompression) will
      be written, and skip over those bytes */
-  length_offset = ptr - *buffer; ptr += sizeof(libspectrum_dword);
+  libspectrum_buffer_write_dword( new_buffer, body_uncompressed_length );
 
   /* compression type */
-#ifdef HAVE_ZLIB_H
-  *ptr++ = 2;		/* Z-RLE */
-#else
-  *ptr++ = 1;		/* RLE */
-#endif
+  libspectrum_buffer_write_byte( new_buffer,
+                     LIBSPECTRUM_SUPPORTS_ZLIB_COMPRESSION ?
+                       2 /* Z-RLE */ : 1 /* RLE */ );
 
   /* flags */
-  *ptr++ = 0;		/* No flags */
+  libspectrum_buffer_write_byte( new_buffer, 0 );		/* No flags */
 
   /* header extension length in bytes */
-  *ptr++ = 0;		/* No header extension */
+  libspectrum_buffer_write_byte( new_buffer, 0 );		/* No header extension */
 
   /* encoding application description */
-  memset( ptr, 0, 16 ); ptr += 16; /* No creator for now */
+  /* No creator for now */
+  for( i = 0; i < 16; i++ ) {
+    libspectrum_buffer_write_byte( new_buffer, 0 );
+  }
 
   /* header extension data is zero so on to the data */
+  libspectrum_buffer_write_buffer( new_buffer, body_buffer );
 
-  error = csw_write_body( buffer, length, tape, sample_rate, length_offset, ptr );
-  if( error != LIBSPECTRUM_ERROR_NONE ) return error;
-
-  return LIBSPECTRUM_ERROR_NONE;
+exit:
+  libspectrum_buffer_free( body_buffer );
+  return error;
 }

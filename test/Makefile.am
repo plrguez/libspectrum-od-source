@@ -60,6 +60,7 @@ EXTRA_DIST += \
 	test/plus3.z80 \
 	test/sp-2000.sna.gz \
 	test/sp-ffff.sna.gz \
+	test/standard-tap.tap \
 	test/turbo-zeropilot.tzx \
 	test/writeprotected.mdr \
 	test/zero-tail.pzx

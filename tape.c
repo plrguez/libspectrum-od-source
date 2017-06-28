@@ -264,11 +264,10 @@ libspectrum_error
 libspectrum_tape_write( libspectrum_byte **buffer, size_t *length,
 			libspectrum_tape *tape, libspectrum_id_t type )
 {
+  libspectrum_byte *ptr = *buffer;
+  libspectrum_buffer *new_buffer;
   libspectrum_class_t class;
   libspectrum_error error;
-
-  /* Allow for uninitialised buffer on entry */
-  if( !*length ) *buffer = NULL;
 
   error = libspectrum_identify_class( &class, type );
   if( error ) return error;
@@ -279,26 +278,40 @@ libspectrum_tape_write( libspectrum_byte **buffer, size_t *length,
     return LIBSPECTRUM_ERROR_INVALID;
   }
 
+  /* Allow for uninitialised buffer on entry */
+  if( !*length ) *buffer = NULL;
+
+  new_buffer = libspectrum_buffer_alloc();
+
   switch( type ) {
 
   case LIBSPECTRUM_ID_TAPE_TAP:
   case LIBSPECTRUM_ID_TAPE_SPC:
   case LIBSPECTRUM_ID_TAPE_STA:
   case LIBSPECTRUM_ID_TAPE_LTP:
-    return internal_tap_write( buffer, length, tape, type );
+    error = internal_tap_write( new_buffer, tape, type );
+    break;
 
   case LIBSPECTRUM_ID_TAPE_TZX:
-    return internal_tzx_write( buffer, length, tape );
+    error = internal_tzx_write( new_buffer, tape );
+    break;
 
   case LIBSPECTRUM_ID_TAPE_CSW:
-    return libspectrum_csw_write( buffer, length, tape );
+    error = libspectrum_csw_write( new_buffer, tape );
+    break;
 
   default:
     libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
 			     "libspectrum_tape_write: format not supported" );
-    return LIBSPECTRUM_ERROR_UNKNOWN;
+    error = LIBSPECTRUM_ERROR_UNKNOWN;
+    break;
 
   }
+
+  libspectrum_buffer_append( buffer, length, &ptr, new_buffer );
+  libspectrum_buffer_free( new_buffer );
+
+  return error;
 }
 
 /* Does this tape structure actually contain a tape? */

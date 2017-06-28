@@ -265,6 +265,17 @@ libspectrum_snap_alloc( void )
   libspectrum_snap_set_ulaplus_palette( snap, 0, NULL );
   libspectrum_snap_set_ulaplus_ff_register( snap, 0 );
 
+  libspectrum_snap_set_multiface_active( snap, 0 );
+  libspectrum_snap_set_multiface_paged( snap, 0 );
+  libspectrum_snap_set_multiface_model_one( snap, 0 );
+  libspectrum_snap_set_multiface_model_128( snap, 0 );
+  libspectrum_snap_set_multiface_model_3( snap, 0 );
+  libspectrum_snap_set_multiface_disabled( snap, 0 );
+  libspectrum_snap_set_multiface_software_lockout( snap, 0 );
+  libspectrum_snap_set_multiface_red_button_disabled( snap, 0 );
+  libspectrum_snap_set_multiface_ram( snap, 0, NULL );
+  libspectrum_snap_set_multiface_ram_length( snap, 0, 0 );
+
   return snap;
 }
 
@@ -328,6 +339,9 @@ libspectrum_snap_free( libspectrum_snap *snap )
 
   if( libspectrum_snap_ulaplus_palette( snap, 0 ) )
     libspectrum_free( libspectrum_snap_ulaplus_palette( snap, 0 ) );
+
+  if( libspectrum_snap_multiface_ram( snap, 0 ) )
+    libspectrum_free( libspectrum_snap_multiface_ram( snap, 0 ) );
 
   libspectrum_free( snap );
 
@@ -426,8 +440,23 @@ libspectrum_snap_read( libspectrum_snap *snap, const libspectrum_byte *buffer,
 libspectrum_error
 libspectrum_snap_write( libspectrum_byte **buffer, size_t *length,
 			int *out_flags, libspectrum_snap *snap,
-	 		libspectrum_id_t type, libspectrum_creator *creator,
+			libspectrum_id_t type, libspectrum_creator *creator,
 			int in_flags )
+{
+  libspectrum_byte *ptr = *buffer;
+  libspectrum_buffer *new_buffer = libspectrum_buffer_alloc();
+  libspectrum_error error =
+    libspectrum_snap_write_buffer( new_buffer, out_flags, snap, type, creator,
+                                   in_flags );
+  libspectrum_buffer_append( buffer, length, &ptr, new_buffer );
+  libspectrum_buffer_free( new_buffer );
+  return error;
+}
+
+libspectrum_error
+libspectrum_snap_write_buffer( libspectrum_buffer *buffer, int *out_flags,
+                               libspectrum_snap *snap, libspectrum_id_t type,
+                               libspectrum_creator *creator, int in_flags )
 {
   libspectrum_class_t class;
   libspectrum_error error;
@@ -444,21 +473,25 @@ libspectrum_snap_write( libspectrum_byte **buffer, size_t *length,
   switch( type ) {
 
   case LIBSPECTRUM_ID_SNAPSHOT_SNA:
-    return libspectrum_sna_write( buffer, length, out_flags, snap, in_flags );
+    error = libspectrum_sna_write( buffer, out_flags, snap, in_flags );
+    break;
 
   case LIBSPECTRUM_ID_SNAPSHOT_SZX:
-    return libspectrum_szx_write( buffer, length, out_flags, snap, creator,
-				  in_flags );
+    error = libspectrum_szx_write( buffer, out_flags, snap, creator, in_flags );
+    break;
 
   case LIBSPECTRUM_ID_SNAPSHOT_Z80:
-    return libspectrum_z80_write2( buffer, length, out_flags, snap, in_flags );
+    error = libspectrum_z80_write2( buffer, out_flags, snap, in_flags );
+    break;
 
   default:
     libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
 			     "libspectrum_snap_write: format not supported" );
-    return LIBSPECTRUM_ERROR_UNKNOWN;
+    error = LIBSPECTRUM_ERROR_UNKNOWN;
 
   }
+
+  return error;
 }
 
 /* Given a 48K memory dump `data', place it into the

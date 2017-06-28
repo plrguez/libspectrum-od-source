@@ -287,6 +287,18 @@ struct libspectrum_snap {
   libspectrum_byte ulaplus_current_register;
   libspectrum_byte* ulaplus_palette[1];
   libspectrum_byte ulaplus_ff_register;
+
+  /* Multiface One/128/3 emulation */
+  int multiface_active;
+  int multiface_paged;
+  int multiface_model_one;
+  int multiface_model_128;
+  int multiface_model_3;
+  int multiface_disabled;
+  int multiface_software_lockout;
+  int multiface_red_button_disabled;
+  libspectrum_byte* multiface_ram[1];
+  size_t multiface_ram_length[1];
 };
 
 /* Initialise a libspectrum_snap structure */
