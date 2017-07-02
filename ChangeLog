@@ -1,3 +1,33 @@
+2017-07-??  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.3.5 released.
+
+        * Add Multiface One/128/3 support (Sergio Baldoví).
+
+        * Add self-inflating buffer for writing binary files (thanks, Patrik
+          Rak) (Fredrick Meunier).
+
+        * Add class recognition for SCR files (Fredrick Meunier).
+
+        * Fix crash when saving CSW tapes (thanks, Nicholas Naime and Fredrick
+          Meunier) (Sergio Baldoví).
+
+        * Various minor bug fixes/improvements:
+          * Add unit test for CSW writing (Fredrick Meunier).
+          * Swich to using autoreconf (Fredrick Meunier).
+          * Use silent builds by default (Fredrick Meunier).
+          * Remove more const qualifiers from libspectrum_buffer API (Sergio
+            Baldoví).
+          * Fix GCC warnings about unexpected values in switch statements
+            (Sergio Baldoví).
+          * Remove unsused variables from libspectrum_buffer refactoring (Sergio
+            Baldoví).
+          * Fix error messages when reading Opus/+D chunks from SZX files
+            (Sergio Baldoví).
+          * Distribute standard-tap.tap (Sergio Baldoví).
+          * Set logical '1' when reading SZX flags (Sergio Baldoví).
+          * Document Multiface snap accessors (Sergio Baldoví).
+
 2017-06-01  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
         * libspectrum 1.3.4 released.
