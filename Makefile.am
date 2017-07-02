@@ -117,6 +117,7 @@ windres.o: windres.rc
 AM_CPPFLAGS = @GLIB_CFLAGS@ @AUDIOFILE_CFLAGS@
 
 EXTRA_DIST = accessor.pl \
+	     buffer_license.txt \
 	     dll.c \
 	     generate.pl.in \
 	     m4/audiofile.m4 \
