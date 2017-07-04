@@ -24,6 +24,8 @@
 
 #include <stdatomic.h>
 
+#include "internals.h"
+
 void
 atomic_lock( atomic_char *lock_ptr )
 {
