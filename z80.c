@@ -283,7 +283,7 @@ read_header( const libspectrum_byte *buffer, libspectrum_snap *snap,
     extra_header = buffer + LIBSPECTRUM_Z80_HEADER_LENGTH + 2;
 
     error = get_joystick_type( snap,
-                               extra_header + 32,
+                               extra_header + 31,
                                ( header[29] & 0xc0 ) >> 6,
                                *version
                              );
@@ -1500,7 +1500,7 @@ write_extended_header( libspectrum_buffer *buffer, int *flags,
     libspectrum_buffer_write_word( buffer, if2_left_u );
     libspectrum_buffer_write_word( buffer, if2_left_f );
   } else {
-    for( i=32; i<52; i++ ) libspectrum_buffer_write_byte( buffer, '\0' );
+    for( i=0; i<20; i++ ) libspectrum_buffer_write_byte( buffer, '\0' );
   }
 
   /* MGT type */
