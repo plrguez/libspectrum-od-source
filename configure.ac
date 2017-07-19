@@ -46,6 +46,9 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 AC_CANONICAL_HOST
 
+PKG_PROG_PKG_CONFIG
+PKG_INSTALLDIR
+
 dnl Use automake to produce `Makefile.in'
 AM_INIT_AUTOMAKE([1.11 subdir-objects])
 AM_SILENT_RULES([yes])
@@ -66,6 +69,7 @@ AC_DEFINE([LIBSPECTRUM_COPYRIGHT], [libspectrum_copyright],
 
 dnl Checks for programs.
 AC_PROG_CC
+AC_PROG_SED
 
 dnl Setup for compiling build tools (make-perl)
 if test $cross_compiling = yes; then

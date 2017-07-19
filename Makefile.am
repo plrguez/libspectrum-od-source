@@ -81,7 +81,8 @@ libspectrum_la_LIBADD = @AUDIOFILE_LIBS@ @GLIB_LIBS@ -lm
 
 libspectrum_la_DEPENDENCIES = @WINDRES_OBJ@
 
-BUILT_SOURCES = libspectrum.h snap_accessors.c tape_accessors.c tape_set.c
+BUILT_SOURCES = libspectrum.h libspectrum.pc snap_accessors.c tape_accessors.c \
+			 tape_set.c
 
 nodist_include_HEADERS = libspectrum.h
 noinst_HEADERS = internals.h \
@@ -89,6 +90,18 @@ noinst_HEADERS = internals.h \
 
 noinst_PROGRAMS =
 noinst_DATA =
+
+# Install the pkg-config file; the directory is set using
+# PKG_INSTALLDIR in configure.ac.
+pkgconfig_DATA = libspectrum.pc
+
+libspectrum.pc: $(srcdir)/libspectrum.pc.in
+	$(AM_V_GEN)$(SED) -e 's![@]prefix[@]!$(prefix)!g' \
+	-e 's![@]exec_prefix[@]!$(exec_prefix)!g' \
+	-e 's![@]includedir[@]!$(includedir)!g' \
+	-e 's![@]libdir[@]!$(libdir)!g' \
+	-e 's![@]PACKAGE_VERSION[@]!$(PACKAGE_VERSION)!g' \
+	$(srcdir)/libspectrum.pc.in > $@
 
 AM_CFLAGS = -DLIBSPECTRUM_EXPORTS
 
@@ -129,9 +142,11 @@ EXTRA_DIST = accessor.pl \
 	     tape_block.h \
 	     tape_set.pl \
 	     libspectrum.h.in \
+	     libspectrum.pc.in \
 	     snap_accessors.txt
 
 CLEANFILES = libspectrum.h \
+	     libspectrum.pc \
 	     snap_accessors.c \
 	     tape_accessors.c \
 	     tape_set.c \

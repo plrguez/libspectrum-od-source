@@ -1,0 +1,10 @@
+Name: libspectrum
+Description: libspectrum is a library which is designed to make the input and output of ZX Spectrum emulator files slightly easier than it would be otherwise.
+URL: http://fuse-emulator.sourceforge.net/libspectrum.php
+Version: @PACKAGE_VERSION@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+Cflags: -I${includedir}
+Libs: -L${libdir} -lspectrum
