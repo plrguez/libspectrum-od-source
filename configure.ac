@@ -69,7 +69,6 @@ AC_DEFINE([LIBSPECTRUM_COPYRIGHT], [libspectrum_copyright],
 
 dnl Checks for programs.
 AC_PROG_CC
-AC_PROG_SED
 
 dnl Setup for compiling build tools (make-perl)
 if test $cross_compiling = yes; then
@@ -239,6 +238,7 @@ AS_IF([test "$libaudiofile" = yes], [
 AC_CONFIG_FILES([
   Makefile
   libspectrum.qpg
+  libspectrum.pc
 ])
 
 AC_OUTPUT
