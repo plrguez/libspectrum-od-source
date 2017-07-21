@@ -138,7 +138,6 @@ EXTRA_DIST = accessor.pl \
 	     snap_accessors.txt
 
 CLEANFILES = libspectrum.h \
-	     libspectrum.pc \
 	     snap_accessors.c \
 	     tape_accessors.c \
 	     tape_set.c \
