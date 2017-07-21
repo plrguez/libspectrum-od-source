@@ -1372,10 +1372,12 @@ rzx_write_creator( libspectrum_buffer *buffer, libspectrum_buffer *block_data,
 static libspectrum_error
 rzx_compress( libspectrum_buffer *dest, libspectrum_buffer *src, int *compress )
 {
+#ifdef HAVE_ZLIB_H
   libspectrum_byte *out_data = libspectrum_buffer_get_data( src );
   size_t out_length = libspectrum_buffer_get_data_size( src );
   libspectrum_byte *compressed_data = NULL;
   libspectrum_error error;
+#endif
 
   if( !(*compress) ) {
     libspectrum_buffer_write_buffer( dest, src );
@@ -1383,7 +1385,6 @@ rzx_compress( libspectrum_buffer *dest, libspectrum_buffer *src, int *compress )
   }
 
 #ifdef HAVE_ZLIB_H
-
   error = libspectrum_zlib_compress( out_data, out_length, &compressed_data,
                                      &out_length );
   if( error != LIBSPECTRUM_ERROR_NONE || 
