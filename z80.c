@@ -1295,7 +1295,7 @@ static libspectrum_error
 write_extended_header( libspectrum_buffer *buffer, int *flags,
                        libspectrum_snap *snap )
 {
-  int i, bottom_16kb_ram;
+  int i, first_8kb_ram, second_8kb_ram;
   libspectrum_byte hardware_flag = 0;      /* No special emulation features */
   int second_memory_port = 0; /* By default, don't write the extra bytes */
   libspectrum_byte machine_byte = Z80_MACHINE_48;
@@ -1450,38 +1450,43 @@ write_extended_header( libspectrum_buffer *buffer, int *flags,
   libspectrum_buffer_write_byte( buffer, '\0' );
 
   /* MGT only for +D for now */
-  if( libspectrum_snap_plusd_active( snap ) ) {
-    libspectrum_buffer_write_byte( buffer,
-                                   libspectrum_snap_plusd_paged( snap ) );
+  if( libspectrum_snap_plusd_active( snap ) &&
+      libspectrum_snap_plusd_paged( snap ) ) {
+    libspectrum_buffer_write_byte( buffer, 0xff );
   } else {
-    libspectrum_buffer_write_byte( buffer, '\0' );
+    libspectrum_buffer_write_byte( buffer, 0x00 );
   }
 
   /* Multiface disabled */
   libspectrum_buffer_write_byte( buffer, '\0' );
 
   /* Is 0x0000 to 0x3fff RAM? True if we're in a +3 64Kb RAM
-     configuration, or a Scorpion configuration with page 0 mapped in */
-  bottom_16kb_ram = 0;
+     configuration, or a Scorpion configuration with page 0 mapped in.
+     +D and DISCiPLE also map RAM pages */
+  first_8kb_ram = second_8kb_ram = 0;
 
   if( capabilities & LIBSPECTRUM_MACHINE_CAPABILITY_PLUS3_MEMORY ) {
 
-    if( libspectrum_snap_out_plus3_memoryport( snap ) & 0x01 )
-      bottom_16kb_ram = 1;
+    if( libspectrum_snap_out_plus3_memoryport( snap ) & 0x01 ) {
+      first_8kb_ram = 1;
+      second_8kb_ram = 1;
+    }
 
   } else if( capabilities & LIBSPECTRUM_MACHINE_CAPABILITY_SCORP_MEMORY ) {
 
-    if( libspectrum_snap_out_plus3_memoryport( snap ) & 0x01 )
-      bottom_16kb_ram = 1;
+    if( libspectrum_snap_out_plus3_memoryport( snap ) & 0x01 ) {
+      first_8kb_ram = 1;
+      second_8kb_ram = 1;
+    }
+  }
+  else if( libspectrum_snap_plusd_active( snap ) &&
+           libspectrum_snap_plusd_paged( snap ) ) {
+    first_8kb_ram = 0;
+    second_8kb_ram = 1;
   }
 
-  if( bottom_16kb_ram ) {
-    libspectrum_buffer_write_byte( buffer, 0xff );
-    libspectrum_buffer_write_byte( buffer, 0xff );
-  } else {
-    libspectrum_buffer_write_byte( buffer, 0x00 );
-    libspectrum_buffer_write_byte( buffer, 0x00 );
-  }
+  libspectrum_buffer_write_byte( buffer, first_8kb_ram ? 0x00 : 0xff );
+  libspectrum_buffer_write_byte( buffer, second_8kb_ram ? 0x00 : 0xff );
 
   /* Joystick settings */
   if( libspectrum_snap_joystick_list( snap, 1 ) ==
@@ -1506,8 +1511,8 @@ write_extended_header( libspectrum_buffer *buffer, int *flags,
   /* MGT type */
   if( libspectrum_snap_plusd_active( snap ) ) {
     libspectrum_buffer_write_byte( buffer, Z80_MGT_PLUSD );
-    libspectrum_buffer_write_byte( buffer, 0xff ); /*    0-8191 ROM */
-    libspectrum_buffer_write_byte( buffer, 0x00 ); /* 8192-9383 RAM */
+    libspectrum_buffer_write_byte( buffer, 0x00 ); /* DISCiPLE inhibitor */
+    libspectrum_buffer_write_byte( buffer, 0x00 ); /* DISCiPLE pageable */
   } else {
     for( i=52; i<55; i++ ) libspectrum_buffer_write_byte( buffer, '\0' );
   }
