@@ -81,8 +81,7 @@ libspectrum_la_LIBADD = @AUDIOFILE_LIBS@ @GLIB_LIBS@ -lm
 
 libspectrum_la_DEPENDENCIES = @WINDRES_OBJ@
 
-BUILT_SOURCES = libspectrum.h libspectrum.pc snap_accessors.c tape_accessors.c \
-			 tape_set.c
+BUILT_SOURCES = libspectrum.h snap_accessors.c tape_accessors.c tape_set.c
 
 nodist_include_HEADERS = libspectrum.h
 noinst_HEADERS = internals.h \
@@ -134,7 +133,6 @@ EXTRA_DIST = accessor.pl \
 	     tape_block.h \
 	     tape_set.pl \
 	     libspectrum.h.in \
-	     libspectrum.pc.in \
 	     snap_accessors.txt
 
 CLEANFILES = libspectrum.h \
