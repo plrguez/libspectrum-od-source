@@ -35,6 +35,7 @@ libspectrum_la_SOURCES = bzip2.c \
 			 libspectrum.c \
                          memory.c \
 			 microdrive.c \
+			 mmc.c \
 			 plusd.c \
 			 pzx_read.c \
 			 rzx.c \
