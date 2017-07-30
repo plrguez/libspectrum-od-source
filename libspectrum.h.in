@@ -1088,14 +1088,23 @@ libspectrum_ide_write( libspectrum_ide_channel *chn,
 
 /* MMC handling routines */
 
+typedef struct libspectrum_mmc_card libspectrum_mmc_card;
+
+WIN32_DLL libspectrum_mmc_card*
+libspectrum_mmc_alloc( void );
+
 WIN32_DLL void
-libspectrum_mmc_card_select( libspectrum_byte data );
+libspectrum_mmc_free( libspectrum_mmc_card *card );
+
+WIN32_DLL void
+libspectrum_mmc_card_select( libspectrum_mmc_card *card,
+    libspectrum_byte data );
 
 WIN32_DLL libspectrum_byte
-libspectrum_mmc_read( void );
+libspectrum_mmc_read( libspectrum_mmc_card *card );
 
 WIN32_DLL void
-libspectrum_mmc_write( libspectrum_byte data );
+libspectrum_mmc_write( libspectrum_mmc_card *card, libspectrum_byte data );
 
 #ifdef __cplusplus
 };

@@ -28,24 +28,7 @@
 
 #include "internals.h"
 
-/* Is the MMC interface currently idle? */
-static int is_idle;
-
-/* The most recent command byte sent to the MMC */
-static libspectrum_byte current_command;
-
-/* The argument for the current MMC command */
-static libspectrum_byte current_argument[4];
-
-/* The response to the most recent command */
-static libspectrum_byte response_buffer[20];
-
-/* One past the last valid byte in response_buffer */
-static libspectrum_byte *response_buffer_end;
-
-/* The next byte to be returned from response_buffer */
-static libspectrum_byte *response_buffer_next;
-
+/* The states while a command is being sent to the card */
 enum command_state_t {
   WAITING_FOR_COMMAND,
   WAITING_FOR_DATA0,
@@ -55,8 +38,7 @@ enum command_state_t {
   WAITING_FOR_CRC
 };
 
-enum command_state_t command_state;
-
+/* The MMC commands we support */
 enum command_byte {
   GO_IDLE_STATE = 0,
   SEND_IF_COND = 8,
@@ -68,21 +50,58 @@ enum command_byte {
   READ_OCR = 58
 };
 
+typedef struct libspectrum_mmc_card {
+  /* Is the MMC interface currently idle? */
+  int is_idle;
+
+  /* The current state of the command being transmitted to the card */
+  enum command_state_t command_state;
+
+  /* The most recent command byte sent to the MMC */
+  libspectrum_byte current_command;
+
+  /* The argument for the current MMC command */
+  libspectrum_byte current_argument[4];
+
+  /* The response to the most recent command */
+  libspectrum_byte response_buffer[20];
+
+  /* One past the last valid byte in response_buffer */
+  libspectrum_byte *response_buffer_end;
+
+  /* The next byte to be returned from response_buffer */
+  libspectrum_byte *response_buffer_next;
+} libspectrum_mmc_card;
+
+libspectrum_mmc_card*
+libspectrum_mmc_alloc( void )
+{
+  libspectrum_mmc_card *card = libspectrum_new( libspectrum_mmc_card, 1 );
+
+  card->is_idle = 0;
+  card->command_state = WAITING_FOR_COMMAND;
+  card->response_buffer_end = card->response_buffer;
+
+  return card;
+}
+
 void
-libspectrum_mmc_card_select( libspectrum_byte data )
+libspectrum_mmc_free( libspectrum_mmc_card *card )
+{
+  libspectrum_free( card );
+}
+
+void
+libspectrum_mmc_card_select( libspectrum_mmc_card *card, libspectrum_byte data )
 {
   printf("libspectrum_mmc_card_select( 0x%02x )\n", data );
-
-  command_state = WAITING_FOR_COMMAND;
-  response_buffer_next = response_buffer_end = response_buffer;
-  is_idle = 0;
 }
 
 libspectrum_byte
-libspectrum_mmc_read( void )
+libspectrum_mmc_read( libspectrum_mmc_card *card )
 {
-  libspectrum_byte r = response_buffer_next < response_buffer_end ?
-    *response_buffer_next++ :
+  libspectrum_byte r = card->response_buffer_next < card->response_buffer_end ?
+    *(card->response_buffer_next)++ :
     0xff;
 
   printf("libspectrum_mmc_read() -> 0x%02x\n", r);
@@ -91,7 +110,7 @@ libspectrum_mmc_read( void )
 }
 
 static int
-parse_command( libspectrum_byte b )
+parse_command( libspectrum_mmc_card *card, libspectrum_byte b )
 {
   libspectrum_byte command;
   int ok = 1;
@@ -110,7 +129,7 @@ parse_command( libspectrum_byte b )
     case APP_SEND_OP_COND:
     case APP_CMD:
     case READ_OCR:
-      current_command = command;
+      card->current_command = command;
       break;
     default:
       printf( "Unknown MMC command %d\n", command );
@@ -123,100 +142,101 @@ parse_command( libspectrum_byte b )
 }
 
 static void
-set_response_buffer_r1( void )
+set_response_buffer_r1( libspectrum_mmc_card *card )
 {
-  response_buffer[ 0 ] = is_idle;
-  response_buffer_next = response_buffer;
-  response_buffer_end = response_buffer + 1;
+  card->response_buffer[ 0 ] = card->is_idle;
+  card->response_buffer_next = card->response_buffer;
+  card->response_buffer_end = card->response_buffer + 1;
 }
 
 static void
-set_response_buffer_r7( libspectrum_dword value )
+set_response_buffer_r7( libspectrum_mmc_card *card, libspectrum_dword value )
 {
-  response_buffer[ 0 ] = is_idle;
-  response_buffer[ 1 ] = ( value & 0xff000000 ) >> 24;
-  response_buffer[ 2 ] = ( value & 0x00ff0000 ) >> 16;
-  response_buffer[ 3 ] = ( value & 0x0000ff00 ) >>  8;
-  response_buffer[ 4 ] = ( value & 0x000000ff );
-  response_buffer_next = response_buffer;
-  response_buffer_end = response_buffer + 5;
+  card->response_buffer[ 0 ] = card->is_idle;
+  card->response_buffer[ 1 ] = ( value & 0xff000000 ) >> 24;
+  card->response_buffer[ 2 ] = ( value & 0x00ff0000 ) >> 16;
+  card->response_buffer[ 3 ] = ( value & 0x0000ff00 ) >>  8;
+  card->response_buffer[ 4 ] = ( value & 0x000000ff );
+  card->response_buffer_next = card->response_buffer;
+  card->response_buffer_end = card->response_buffer + 5;
 }
 
 static void
-do_command( void )
+do_command( libspectrum_mmc_card *card )
 {
-  switch( current_command ) {
+  switch( card->current_command ) {
     case GO_IDLE_STATE:
       printf("Executing GO_IDLE_STATE\n");
-      set_response_buffer_r1();
+      card->is_idle = 1;
+      set_response_buffer_r1( card );
       break;
     case SEND_IF_COND:
       printf("Executing SEND_IF_COND\n");
-      set_response_buffer_r7( 0x000001aa );
+      set_response_buffer_r7( card, 0x000001aa );
       break;
     case SEND_CSD:
       printf("Executing SEND_CSD\n");
-      response_buffer[ 0 ] = is_idle;
-      response_buffer[ 1 ] = 0xfe;
+      card->response_buffer[ 0 ] = card->is_idle;
+      card->response_buffer[ 1 ] = 0xfe;
 
       /* TODO */
-      memset( &response_buffer[ 2 ], 0x00, 16 );
-      memset( &response_buffer[ 18 ], 0x00, 2 );
+      memset( &card->response_buffer[ 2 ], 0x00, 16 );
+      memset( &card->response_buffer[ 18 ], 0x00, 2 );
 
-      response_buffer_next = response_buffer;
-      response_buffer_end = response_buffer + 20;
+      card->response_buffer_next = card->response_buffer;
+      card->response_buffer_end = card->response_buffer + 20;
       break;
     case SEND_CID:
       printf("Executing SEND_CID\n");
-      response_buffer[ 0 ] = is_idle;
-      response_buffer[ 1 ] = 0xfe;
+      card->response_buffer[ 0 ] = card->is_idle;
+      card->response_buffer[ 1 ] = 0xfe;
 
       /* TODO */
-      memset( &response_buffer[ 2 ], 0x00, 16 );
-      memset( &response_buffer[ 18 ], 0x00, 2 );
+      memset( &card->response_buffer[ 2 ], 0x00, 16 );
+      memset( &card->response_buffer[ 18 ], 0x00, 2 );
 
-      response_buffer_next = response_buffer;
-      response_buffer_end = response_buffer + 20;
+      card->response_buffer_next = card->response_buffer;
+      card->response_buffer_end = card->response_buffer + 20;
       break;
     case APP_SEND_OP_COND:
       printf("Executing APP_SEND_OP_COND\n");
-      is_idle = 0;
-      set_response_buffer_r1();
+      card->is_idle = 0;
+      set_response_buffer_r1( card );
       break;
     case APP_CMD:
       printf("Executing APP_CMD\n");
-      set_response_buffer_r1();
+      set_response_buffer_r1( card );
       break;
     case READ_OCR:
       printf("Executing READ_OCR\n");
 
       /* TODO */
-      set_response_buffer_r7( 0xc0000000 );
+      set_response_buffer_r7( card, 0xc0000000 );
 
       break;
     default:
-      printf("Attempted to execute unknown MMC command %d\n", current_command );
+      printf("Attempted to execute unknown MMC command %d\n", card->current_command );
       abort();
       break;
   }
 }
 
 void
-libspectrum_mmc_write( libspectrum_byte data )
+libspectrum_mmc_write( libspectrum_mmc_card *card, libspectrum_byte data )
 {
   int ok = 1;
 
   printf("libspectrum_mmc_write( 0x%02x )\n", data );
 
-  switch( command_state ) {
+  switch( card->command_state ) {
     case WAITING_FOR_COMMAND:
-      ok = parse_command( data );
+      ok = parse_command( card, data );
       break;
     case WAITING_FOR_DATA0:
     case WAITING_FOR_DATA1:
     case WAITING_FOR_DATA2:
     case WAITING_FOR_DATA3:
-      current_argument[ command_state - 1 ] = data;
+      card->current_argument[ card->command_state - 1 ] = data;
       break;
     case WAITING_FOR_CRC:
       /* We ignore the CRC */
@@ -224,11 +244,11 @@ libspectrum_mmc_write( libspectrum_byte data )
     }
 
   if( ok ) {
-    if( command_state == WAITING_FOR_CRC ) {
-      do_command();
-      command_state = WAITING_FOR_COMMAND;
+    if( card->command_state == WAITING_FOR_CRC ) {
+      do_command( card );
+      card->command_state = WAITING_FOR_COMMAND;
     } else {
-      command_state++;
+      card->command_state++;
     }
   } else {
     /* TODO: Error handling */
