@@ -1,3 +1,22 @@
+2017-07-??  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.3.6 released.
+
+        * Fix Z80 snapshot writing when +D is enabled (thanks, Fredrick Meunier)
+          (Sergio Baldoví).
+
+        * Export pkgconfig file to publish library version (fixes bug #382)
+          (Sergio Baldoví and Fredrick Meunier).
+
+        * Fix offset of keyboard mappings in Z80 v3 snaphots (fixes bug #340)
+          (Sergio Baldoví).
+
+        * Various minor bug fixes/improvements:
+          * Replace '*' in boolean context with '&&' in libspectrum_malloc0_n()
+            (Sergio Baldoví).
+          * Fix warning about missing atomic_lock()/atomic_unlock() declarations
+            in gslock.c (Fredrick Meunier).
+
 2017-07-02  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
         * libspectrum 1.3.5 released.
