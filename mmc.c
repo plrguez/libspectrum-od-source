@@ -80,7 +80,8 @@ libspectrum_mmc_alloc( void )
 
   card->is_idle = 0;
   card->command_state = WAITING_FOR_COMMAND;
-  card->response_buffer_end = card->response_buffer;
+  card->response_buffer_next = card->response_buffer_end =
+    card->response_buffer;
 
   return card;
 }
