@@ -277,6 +277,49 @@ libspectrum_error
 libspectrum_tape_get_next_edge_internal( libspectrum_dword *tstates, int *flags,
                                          libspectrum_tape *tape,
                                          libspectrum_tape_block_state *it );
+/* Disk routines */
+
+typedef struct libspectrum_hdf_header {
+
+  libspectrum_byte signature[0x06];
+  libspectrum_byte id;
+  libspectrum_byte revision;
+  libspectrum_byte flags;
+  libspectrum_byte datastart_low;
+  libspectrum_byte datastart_hi;
+  libspectrum_byte reserved[0x0b];
+  libspectrum_byte drive_identity[0x6a];
+
+} libspectrum_hdf_header;
+  
+typedef struct libspectrum_ide_drive {
+
+  /* HDF filepointer and information */
+  FILE *disk;
+  libspectrum_word data_offset;
+  libspectrum_word sector_size;
+  libspectrum_hdf_header hdf;
+  
+  /* Drive geometry */
+  int cylinders;
+  int heads;
+  int sectors;
+
+  libspectrum_byte error;
+  libspectrum_byte status;
+  
+} libspectrum_ide_drive;
+
+libspectrum_error
+libspectrum_ide_insert_into_drive( libspectrum_ide_drive *drv,
+                                   const char *filename );
+
+libspectrum_error
+libspectrum_ide_eject_from_drive( libspectrum_ide_drive *drv,
+                                  GHashTable *cache );
+
+void
+libspectrum_ide_commit_drive( libspectrum_ide_drive *drv, GHashTable *cache );
 
 /* Crypto functions */
 

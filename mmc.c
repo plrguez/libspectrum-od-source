@@ -51,6 +51,12 @@ enum command_byte {
 };
 
 typedef struct libspectrum_mmc_card {
+  /* The actual "card" data */
+  libspectrum_ide_drive drive;
+
+  /* Cache of written sectors */
+  GHashTable *cache;
+
   /* Is the MMC interface currently idle? */
   int is_idle;
 
@@ -83,13 +89,46 @@ libspectrum_mmc_alloc( void )
   card->response_buffer_next = card->response_buffer_end =
     card->response_buffer;
 
+  card->cache = g_hash_table_new( g_int_hash, g_int_equal );
+
   return card;
 }
 
 void
 libspectrum_mmc_free( libspectrum_mmc_card *card )
 {
+  libspectrum_mmc_eject( card );
+
+  g_hash_table_destroy( card->cache );
+
   libspectrum_free( card );
+}
+
+libspectrum_error
+libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename )
+{
+  libspectrum_mmc_eject( card );
+  if ( !filename ) return LIBSPECTRUM_ERROR_NONE;
+
+  return libspectrum_ide_insert_into_drive( &card->drive, filename );
+}
+
+void
+libspectrum_mmc_eject( libspectrum_mmc_card *card )
+{
+  libspectrum_ide_eject_from_drive( &card->drive, card->cache );
+}
+
+int
+libspectrum_mmc_dirty( libspectrum_mmc_card *card )
+{
+  return g_hash_table_size( card->cache ) != 0;
+}
+
+void
+libspectrum_mmc_commit( libspectrum_mmc_card *card )
+{
+  libspectrum_ide_commit_drive( &card->drive, card->cache );
 }
 
 libspectrum_byte
@@ -159,6 +198,9 @@ set_response_buffer_r7( libspectrum_mmc_card *card, libspectrum_dword value )
 static void
 do_command( libspectrum_mmc_card *card )
 {
+  /* No card inserted => no change in state */
+  if( !card->drive.disk ) return;
+
   switch( card->current_command ) {
     case GO_IDLE_STATE:
       printf("Executing GO_IDLE_STATE\n");

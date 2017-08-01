@@ -104,37 +104,6 @@ typedef enum libspectrum_ide_identityfield {
   (arr)[ ( (index) << 1 ) + 1 ] = (val) >> 8; \
   (arr)[ (index) << 1 ] = (val) & 0xff;
 
-typedef struct libspectrum_hdf_header {
-
-  libspectrum_byte signature[0x06];
-  libspectrum_byte id;
-  libspectrum_byte revision;
-  libspectrum_byte flags;
-  libspectrum_byte datastart_low;
-  libspectrum_byte datastart_hi;
-  libspectrum_byte reserved[0x0b];
-  libspectrum_byte drive_identity[0x6a];
-
-} libspectrum_hdf_header;
-  
-typedef struct libspectrum_ide_drive {
-
-  /* HDF filepointer and information */
-  FILE *disk;
-  libspectrum_word data_offset;
-  libspectrum_word sector_size;
-  libspectrum_hdf_header hdf;
-  
-  /* Drive geometry */
-  int cylinders;
-  int heads;
-  int sectors;
-
-  libspectrum_byte error;
-  libspectrum_byte status;
-  
-} libspectrum_ide_drive;
-
 struct libspectrum_ide_channel {
 
   /* Interface bus width */
@@ -224,19 +193,13 @@ libspectrum_ide_free( libspectrum_ide_channel *chn )
   return LIBSPECTRUM_ERROR_NONE;
 }
 
-/* Insert a hard disk into a drive */
 libspectrum_error
-libspectrum_ide_insert( libspectrum_ide_channel *chn,
-			libspectrum_ide_unit unit,
-                        const char *filename )
+libspectrum_ide_insert_into_drive( libspectrum_ide_drive *drv,
+                                   const char *filename )
 {
   FILE *f;
   size_t l;
-  libspectrum_ide_drive *drv = &chn->drive[unit];
 
-  libspectrum_ide_eject( chn, unit );
-  if ( !filename ) return LIBSPECTRUM_ERROR_NONE;
-  
   /* Open the file */
   f = fopen( filename, "rb+" );
   if( !f ) {
@@ -287,6 +250,20 @@ libspectrum_ide_insert( libspectrum_ide_channel *chn,
   return LIBSPECTRUM_ERROR_NONE;
 }
 
+/* Insert a hard disk into a drive */
+libspectrum_error
+libspectrum_ide_insert( libspectrum_ide_channel *chn,
+			libspectrum_ide_unit unit,
+                        const char *filename )
+{
+  libspectrum_ide_drive *drv = &chn->drive[unit];
+
+  libspectrum_ide_eject( chn, unit );
+  if ( !filename ) return LIBSPECTRUM_ERROR_NONE;
+
+  return libspectrum_ide_insert_into_drive( drv, filename );
+}
+
 static gboolean
 write_to_disk( gpointer key, gpointer value, gpointer user_data )
 {
@@ -309,20 +286,20 @@ write_to_disk( gpointer key, gpointer value, gpointer user_data )
   return TRUE;	/* TRUE => remove key/value pair from hash */
 }
 
+void
+libspectrum_ide_commit_drive( libspectrum_ide_drive *drv, GHashTable *cache )
+{
+  if( !drv->disk ) return;
+
+  g_hash_table_foreach_remove( cache, write_to_disk, drv );
+}
+
 /* Commit any pending writes to disk */
 libspectrum_error
 libspectrum_ide_commit( libspectrum_ide_channel *chn,
 			libspectrum_ide_unit unit )
 {
-  libspectrum_ide_drive *drv;
-  GHashTable *cache;
-
-  drv = &chn->drive[ unit ];
-  cache = chn->cache[ unit ];
-
-  if( !drv->disk ) return LIBSPECTRUM_ERROR_NONE;
-
-  g_hash_table_foreach_remove( cache, write_to_disk, drv );
+  libspectrum_ide_commit_drive( &chn->drive[ unit ], chn->cache[ unit ] );
 
   return LIBSPECTRUM_ERROR_NONE;
 }
@@ -343,17 +320,11 @@ libspectrum_ide_dirty( libspectrum_ide_channel *chn,
   return g_hash_table_size( chn->cache[ unit ] ) != 0;
 }
 
-/* Eject a hard disk from a drive */
+/* Eject a hard disk from a drive and free its cache */
 libspectrum_error
-libspectrum_ide_eject( libspectrum_ide_channel *chn,
-                       libspectrum_ide_unit unit )
+libspectrum_ide_eject_from_drive( libspectrum_ide_drive *drv,
+                                  GHashTable *cache )
 {
-  libspectrum_ide_drive *drv;
-  GHashTable *cache;
-
-  drv = &chn->drive[ unit ];
-  cache = chn->cache[ unit ];
-
   if( !drv->disk ) return LIBSPECTRUM_ERROR_NONE;
 
   fclose( drv->disk );
@@ -362,6 +333,15 @@ libspectrum_ide_eject( libspectrum_ide_channel *chn,
   g_hash_table_foreach_remove( cache, clear_cache, NULL );
   
   return LIBSPECTRUM_ERROR_NONE;
+}
+
+/* Eject a hard disk from a channel / unit combination */
+libspectrum_error
+libspectrum_ide_eject( libspectrum_ide_channel *chn,
+                       libspectrum_ide_unit unit )
+{
+  return libspectrum_ide_eject_from_drive( &chn->drive[ unit ],
+                                           chn->cache[ unit ] );
 }
 
 /* Reset an IDE channel */

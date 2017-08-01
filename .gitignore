@@ -40,6 +40,7 @@
 /stamp-h
 /stamp-h1
 /stamp-h.in
+*.swp
 /tags
 /tape_accessors.c
 /tape_set.c
