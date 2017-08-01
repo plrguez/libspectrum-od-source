@@ -91,12 +91,6 @@ libspectrum_mmc_free( libspectrum_mmc_card *card )
   libspectrum_free( card );
 }
 
-void
-libspectrum_mmc_card_select( libspectrum_mmc_card *card, libspectrum_byte data )
-{
-  printf("libspectrum_mmc_card_select( 0x%02x )\n", data );
-}
-
 libspectrum_byte
 libspectrum_mmc_read( libspectrum_mmc_card *card )
 {
