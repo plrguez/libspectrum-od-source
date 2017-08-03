@@ -57,6 +57,9 @@ typedef struct libspectrum_mmc_card {
   /* Cache of written sectors */
   GHashTable *cache;
 
+  /* The C_SIZE field of the card CSD */
+  libspectrum_word c_size;
+
   /* Is the MMC interface currently idle? */
   int is_idle;
 
@@ -107,10 +110,26 @@ libspectrum_mmc_free( libspectrum_mmc_card *card )
 libspectrum_error
 libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename )
 {
-  libspectrum_mmc_eject( card );
-  if ( !filename ) return LIBSPECTRUM_ERROR_NONE;
+  libspectrum_error error;
+  libspectrum_dword total_sectors, c_size;
 
-  return libspectrum_ide_insert_into_drive( &card->drive, filename );
+  libspectrum_mmc_eject( card );
+  if( !filename ) return LIBSPECTRUM_ERROR_NONE;
+
+  error = libspectrum_ide_insert_into_drive( &card->drive, filename );
+  if( error ) return error;
+
+  total_sectors = (libspectrum_dword)card->drive.cylinders *
+    card->drive.heads * card->drive.sectors;
+
+  /* We take C_SIZE_MULT to always be 7 for now, meaning we reduce
+     the sector count by (7+2) = 9 bits. This gives us a minimum card size
+     of 2^9 * 2^9 = 2^18 bytes = 256 Kb. Not too worried about that. */
+  c_size = (total_sectors >> 9) - 1;
+
+  card->c_size = c_size >= (1 << 12) ? (1 << 12) - 1 : c_size;
+
+  return LIBSPECTRUM_ERROR_NONE;
 }
 
 void
@@ -216,8 +235,21 @@ do_command( libspectrum_mmc_card *card )
       card->response_buffer[ 0 ] = card->is_idle;
       card->response_buffer[ 1 ] = 0xfe;
 
-      /* TODO */
       memset( &card->response_buffer[ 2 ], 0x00, 16 );
+      /* READ_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors */
+      card->response_buffer[ 2 +  5 ] = 0x09;
+
+      /* C_SIZE (spread 2 bits, 8 bits, 2 bits across three bytes) */
+      card->response_buffer[ 2 +  6 ] = card->c_size >> 10;
+      card->response_buffer[ 2 +  7 ] = (card->c_size >> 2) & 0xff;
+      card->response_buffer[ 2 +  8 ] = (card->c_size & 0x03) << 6;
+
+      /* C_SIZE_MULT = 7 => 2 ^ (2+7) = 512x size multiplier
+         (spread 2 bits, 1 bit across two bytes) */
+      card->response_buffer[ 2 +  9 ] = 0x03;
+      card->response_buffer[ 2 + 10 ] = 0x80;
+
+      /* CRC */
       memset( &card->response_buffer[ 18 ], 0x00, 2 );
 
       card->response_buffer_next = card->response_buffer;
