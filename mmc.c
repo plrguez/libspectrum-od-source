@@ -73,7 +73,7 @@ typedef struct libspectrum_mmc_card {
   libspectrum_byte current_argument[4];
 
   /* The response to the most recent command */
-  libspectrum_byte response_buffer[20];
+  libspectrum_byte response_buffer[516];
 
   /* One past the last valid byte in response_buffer */
   libspectrum_byte *response_buffer_end;
@@ -214,6 +214,75 @@ set_response_buffer_r7( libspectrum_mmc_card *card, libspectrum_dword value )
   card->response_buffer_end = card->response_buffer + 5;
 }
 
+/* TODO: merge this with ide.c:read_hdf() */
+static int
+read_single_block( libspectrum_mmc_card *card )
+{
+  libspectrum_ide_drive *drv = &card->drive;
+  GHashTable *cache = card->cache;
+  libspectrum_byte *buffer, packed_buf[512];
+  libspectrum_dword byte_offset, sector_number;
+
+  byte_offset = 
+    card->current_argument[ 3 ] +
+    (card->current_argument[ 2 ] << 8) +
+    (card->current_argument[ 1 ] << 16) +
+    (card->current_argument[ 0 ] << 24);
+
+  /* TODO: I don't believe this is right. The argument to READ_SINGLE_BLOCK
+     is the byte offset, not the sector number, so we *should* be dividing
+     this by 512. But this works and that doesn't - possibly a combination
+     of bugs cancelling out?? */
+  sector_number = byte_offset;
+
+  /* First look in the write cache */
+  buffer = g_hash_table_lookup( cache, &sector_number );
+
+  /* If it's not in the write cache, read from the disk image */
+  if( !buffer ) {
+
+    long sector_position;
+
+    sector_position =
+      drv->data_offset + ( drv->sector_size * sector_number );
+
+    /* Seek to the correct file position */
+    if( fseek( drv->disk, sector_position, SEEK_SET ) ) return 1;
+
+    /* Read the packed data into a temporary buffer */
+    if ( fread( packed_buf, 1, drv->sector_size, drv->disk ) !=
+	 drv->sector_size                                       )
+      return 1;		/* read error */
+
+    buffer = packed_buf;
+  }
+
+  /* Unpack or copy the data into the sector buffer */
+  if( drv->sector_size == 256 ) {
+
+    int i;
+    
+    for( i = 0; i < 256; i++ ) {
+      card->response_buffer[ 2 + i * 2     ] = buffer[ i ];
+      card->response_buffer[ 2 + i * 2 + 1 ] = 0xff;
+    }
+
+  } else {
+    memcpy( &card->response_buffer[ 2 ], buffer, 512 );
+  }
+  
+  card->response_buffer[ 0 ] = card->is_idle;
+  card->response_buffer[ 1 ] = 0xfe;
+
+  /* CRC */
+  memset( &card->response_buffer[ 514 ], 0x00, 2 );
+
+  card->response_buffer_next = card->response_buffer;
+  card->response_buffer_end = card->response_buffer + 516;
+
+  return 0;
+}
+
 static void
 do_command( libspectrum_mmc_card *card )
 {
@@ -266,6 +335,10 @@ do_command( libspectrum_mmc_card *card )
 
       card->response_buffer_next = card->response_buffer;
       card->response_buffer_end = card->response_buffer + 20;
+      break;
+    case READ_SINGLE_BLOCK:
+      printf("Executing READ_SINGLE_BLOCK\n");
+      if( read_single_block( card ) ) abort();
       break;
     case APP_SEND_OP_COND:
       printf("Executing APP_SEND_OP_COND\n");
