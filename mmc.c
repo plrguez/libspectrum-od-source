@@ -35,7 +35,11 @@ enum command_state_t {
   WAITING_FOR_DATA1,
   WAITING_FOR_DATA2,
   WAITING_FOR_DATA3,
-  WAITING_FOR_CRC
+  WAITING_FOR_CRC,
+  WAITING_FOR_DATA_TOKEN,
+  WAITING_FOR_DATA,
+  WAITING_FOR_DATA_CRC1,
+  WAITING_FOR_DATA_CRC2
 };
 
 /* The MMC commands we support */
@@ -45,6 +49,7 @@ enum command_byte {
   SEND_CSD = 9,
   SEND_CID = 10,
   READ_SINGLE_BLOCK = 17,
+  WRITE_BLOCK = 24,
   APP_SEND_OP_COND = 41,
   APP_CMD = 55,
   READ_OCR = 58
@@ -71,6 +76,12 @@ typedef struct libspectrum_mmc_card {
 
   /* The argument for the current MMC command */
   libspectrum_byte current_argument[4];
+
+  /* How much data has been sent for the current command */
+  size_t data_count;
+
+  /* The data for the current command */
+  libspectrum_byte send_buffer[512];
 
   /* The response to the most recent command */
   libspectrum_byte response_buffer[516];
@@ -179,6 +190,7 @@ parse_command( libspectrum_mmc_card *card, libspectrum_byte b )
     case SEND_CSD:
     case SEND_CID:
     case READ_SINGLE_BLOCK:
+    case WRITE_BLOCK:
     case APP_SEND_OP_COND:
     case APP_CMD:
     case READ_OCR:
@@ -340,6 +352,10 @@ do_command( libspectrum_mmc_card *card )
       printf("Executing READ_SINGLE_BLOCK\n");
       if( read_single_block( card ) ) abort();
       break;
+    case WRITE_BLOCK:
+      printf("Executing WRITE_BLOCK\n");
+      set_response_buffer_r1( card );
+      break;
     case APP_SEND_OP_COND:
       printf("Executing APP_SEND_OP_COND\n");
       card->is_idle = 0;
@@ -363,36 +379,104 @@ do_command( libspectrum_mmc_card *card )
   }
 }
 
+static void
+write_single_block( libspectrum_mmc_card *card )
+{
+  libspectrum_ide_drive *drv = &card->drive;
+  GHashTable *cache = card->cache;
+  libspectrum_byte *buffer;
+  libspectrum_dword sector_number;
+
+  sector_number =
+    card->current_argument[ 3 ] +
+    (card->current_argument[ 2 ] << 8) +
+    (card->current_argument[ 1 ] << 16) +
+    (card->current_argument[ 0 ] << 24);
+
+  buffer = g_hash_table_lookup( cache, &sector_number );
+
+  /* Add this sector to the write cache if it's not already present */
+  if( !buffer ) {
+
+    gint *key;
+
+    key = libspectrum_new( gint, 1 );
+    buffer = libspectrum_new( libspectrum_byte, drv->sector_size );
+
+    *key = sector_number;
+    g_hash_table_insert( cache, key, buffer );
+
+  }
+
+  /* Pack or copy the data into the write cache */
+  if ( drv->sector_size == 256 ) {
+    int i;
+    for( i = 0; i < 256; i++ ) buffer[i] = card->send_buffer[ i * 2 ];
+  } else {
+    memcpy( buffer, card->send_buffer, 512 );
+  }
+}
+
+static void
+do_command_data( libspectrum_mmc_card *card )
+{
+  switch( card->current_command ) {
+    case WRITE_BLOCK:
+      printf("Handling WRITE_BLOCK data\n");
+      write_single_block( card );
+      card->response_buffer[ 0 ] = 0x05;
+      card->response_buffer[ 1 ] = 0x05;
+      card->response_buffer_next = card->response_buffer;
+      card->response_buffer_end = card->response_buffer + 2;
+      break;
+    default:
+      printf("Attempting to execute unknown MMC data command %d\n", card->current_command );
+      abort();
+  }
+}
+
 void
 libspectrum_mmc_write( libspectrum_mmc_card *card, libspectrum_byte data )
 {
-  int ok = 1;
-
   printf("libspectrum_mmc_write( 0x%02x )\n", data );
 
   switch( card->command_state ) {
     case WAITING_FOR_COMMAND:
-      ok = parse_command( card, data );
+      if( parse_command( card, data ) )
+        card->command_state = WAITING_FOR_DATA0;
       break;
     case WAITING_FOR_DATA0:
     case WAITING_FOR_DATA1:
     case WAITING_FOR_DATA2:
     case WAITING_FOR_DATA3:
       card->current_argument[ card->command_state - 1 ] = data;
+      card->command_state++;
       break;
     case WAITING_FOR_CRC:
       /* We ignore the CRC */
+      do_command( card );
+      card->command_state = card->current_command == WRITE_BLOCK ?
+        WAITING_FOR_DATA_TOKEN :
+        WAITING_FOR_COMMAND;
+      break;
+    case WAITING_FOR_DATA_TOKEN:
+      if( data == 0xfe ) {
+        card->command_state = WAITING_FOR_DATA;
+        card->data_count = 0;
+      }
+      break;
+    case WAITING_FOR_DATA:
+      card->send_buffer[ card->data_count++ ] = data;
+      if( card->data_count == 512 )
+        card->command_state = WAITING_FOR_DATA_CRC1;
+      break;
+    case WAITING_FOR_DATA_CRC1:
+      /* We ignore the data CRC as well */
+      card->command_state = WAITING_FOR_DATA_CRC2;
+      break;
+    case WAITING_FOR_DATA_CRC2:
+      do_command_data( card );
+      card->command_state = WAITING_FOR_COMMAND;
       break;
     }
-
-  if( ok ) {
-    if( card->command_state == WAITING_FOR_CRC ) {
-      do_command( card );
-      card->command_state = WAITING_FOR_COMMAND;
-    } else {
-      card->command_state++;
-    }
-  } else {
-    /* TODO: Error handling */
-  }
 }
