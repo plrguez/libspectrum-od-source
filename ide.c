@@ -407,22 +407,14 @@ libspectrum_ide_reset( libspectrum_ide_channel *chn )
   return LIBSPECTRUM_ERROR_NONE;
 }
 
-
-/* Read a sector from the HDF file */
-static int
-read_hdf( libspectrum_ide_channel *chn )
+int
+libspectrum_ide_read_sector_from_hdf( libspectrum_ide_drive *drv,
+    GHashTable *cache, libspectrum_dword sector_number, libspectrum_byte *dest )
 {
-  libspectrum_ide_unit selected;
-  libspectrum_ide_drive *drv;
-  GHashTable *cache;
   libspectrum_byte *buffer, packed_buf[512];
 
-  selected = chn->selected;
-  drv = &chn->drive[ selected ];
-  cache = chn->cache[ selected ];
-
   /* First look in the write cache */
-  buffer = g_hash_table_lookup( cache, &chn->sector_number );
+  buffer = g_hash_table_lookup( cache, &sector_number );
 
   /* If it's not in the write cache, read from the disk image */
   if( !buffer ) {
@@ -430,7 +422,7 @@ read_hdf( libspectrum_ide_channel *chn )
     long sector_position;
 
     sector_position =
-      drv->data_offset + ( drv->sector_size * chn->sector_number );
+      drv->data_offset + ( drv->sector_size * sector_number );
 
     /* Seek to the correct file position */
     if( fseek( drv->disk, sector_position, SEEK_SET ) ) return 1;
@@ -449,17 +441,25 @@ read_hdf( libspectrum_ide_channel *chn )
     int i;
     
     for( i = 0; i < 256; i++ ) {
-      chn->buffer[ i*2 ] = buffer[ i ];
-      chn->buffer[ i*2 + 1 ] = 0xff;
+      dest[ i*2 ] = buffer[ i ];
+      dest[ i*2 + 1 ] = 0xff;
     }
 
   } else {
-    memcpy( chn->buffer, buffer, 512 );
+    memcpy( dest, buffer, 512 );
   }
-  
+
   return 0;
 }
 
+/* Read a sector from the HDF file */
+static int
+read_hdf( libspectrum_ide_channel *chn )
+{
+  return libspectrum_ide_read_sector_from_hdf(
+      &chn->drive[ chn->selected ], chn->cache[ chn->selected ],
+      chn->sector_number, chn->buffer );
+}
 
 /* Write a sector to the HDF file */
 static int

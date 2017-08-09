@@ -318,6 +318,13 @@ libspectrum_error
 libspectrum_ide_eject_from_drive( libspectrum_ide_drive *drv,
                                   GHashTable *cache );
 
+int
+libspectrum_ide_read_sector_from_hdf(
+    libspectrum_ide_drive *drv,
+    GHashTable *cache,
+    libspectrum_dword sector_number,
+    libspectrum_byte *dest );
+
 void
 libspectrum_ide_commit_drive( libspectrum_ide_drive *drv, GHashTable *cache );
 
