@@ -138,7 +138,8 @@ libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename )
      of 2^9 * 2^9 = 2^18 bytes = 256 Kb. Not too worried about that. */
   c_size = (total_sectors >> 9) - 1;
 
-  card->c_size = c_size >= (1 << 12) ? (1 << 12) - 1 : c_size;
+  /* We emulate an SDHC card which has a maximum C_SIZE of 16 bits */
+  card->c_size = c_size >= (1 << 16) ? (1 << 16) - 1 : c_size;
 
   return LIBSPECTRUM_ERROR_NONE;
 }
@@ -291,7 +292,7 @@ do_command( libspectrum_mmc_card *card )
       card->response_buffer[ 0 ] = card->is_idle;
       card->response_buffer[ 1 ] = 0xfe;
 
-      /* TODO */
+      /* For now, we return an empty CID. This seems to work. */
       memset( &card->response_buffer[ 2 ], 0x00, 16 );
       memset( &card->response_buffer[ 18 ], 0x00, 2 );
 
@@ -312,7 +313,8 @@ do_command( libspectrum_mmc_card *card )
       set_response_buffer_r1( card );
       break;
     case READ_OCR:
-      /* TODO */
+      /* We set only the card capacity status (CCS, bit 30) and card power up
+         status bits (bit 31). CCS set indicates an SDHC card. */
       set_response_buffer_r7( card, 0xc0000000 );
       break;
     default:
