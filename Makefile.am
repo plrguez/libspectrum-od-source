@@ -76,7 +76,7 @@ endif
 ## * Always increase the revision value.
 ## * Increase the age value only if the changes made to the ABI are backward
 ##   compatible.
-libspectrum_la_LDFLAGS = -version-info 13:7:5 -no-undefined @WINDRES_LDFLAGS@
+libspectrum_la_LDFLAGS = -version-info 14:9:6 -no-undefined @WINDRES_LDFLAGS@
 
 libspectrum_la_LIBADD = @AUDIOFILE_LIBS@ @GLIB_LIBS@ -lm
 
@@ -90,6 +90,10 @@ noinst_HEADERS = internals.h \
 
 noinst_PROGRAMS =
 noinst_DATA =
+
+# Install the pkg-config file; the directory is set using
+# PKG_INSTALLDIR in configure.ac.
+pkgconfig_DATA = libspectrum.pc
 
 AM_CFLAGS = -DLIBSPECTRUM_EXPORTS
 
@@ -118,6 +122,7 @@ windres.o: windres.rc
 AM_CPPFLAGS = @GLIB_CFLAGS@ @AUDIOFILE_CFLAGS@
 
 EXTRA_DIST = accessor.pl \
+	     buffer_license.txt \
 	     dll.c \
 	     generate.pl.in \
 	     m4/audiofile.m4 \

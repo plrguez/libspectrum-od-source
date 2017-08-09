@@ -6,7 +6,7 @@
    Copyright (C) 2007 Patrik Rak (patrik@raxoft.cz)
 
    The buffer.h source code is released under the MIT license, see included
-   license.txt.
+   buffer_license.txt.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

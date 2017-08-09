@@ -68,7 +68,7 @@ libspectrum_malloc0_n( size_t nmemb, size_t size )
   ptr = libspectrum_calloc_fn( nmemb, size );
 
   /* If nmemb * size == 0, acceptable to return NULL */
-  if( ( nmemb * size ) && !ptr ) abort();
+  if( nmemb && size && !ptr ) abort();
 
   return ptr;
 }

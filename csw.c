@@ -319,9 +319,11 @@ libspectrum_csw_write( libspectrum_buffer *new_buffer, libspectrum_tape *tape )
   libspectrum_buffer_write_dword( new_buffer, body_uncompressed_length );
 
   /* compression type */
-  libspectrum_buffer_write_byte( new_buffer,
-                     LIBSPECTRUM_SUPPORTS_ZLIB_COMPRESSION ?
-                       2 /* Z-RLE */ : 1 /* RLE */ );
+#ifdef HAVE_ZLIB_H
+  libspectrum_buffer_write_byte( new_buffer, 2 ); /* Z-RLE */
+#else
+  libspectrum_buffer_write_byte( new_buffer, 1 ); /* RLE */
+#endif
 
   /* flags */
   libspectrum_buffer_write_byte( new_buffer, 0 );		/* No flags */

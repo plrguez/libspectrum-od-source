@@ -19,6 +19,7 @@
 /install-sh
 .libs
 /libspectrum.h
+/libspectrum.pc
 /libspectrum.la
 /libspectrum.qpg
 /libtool
@@ -36,6 +37,8 @@
 /missing
 /mkinstalldirs
 *.o
+*.orig
+*.rej
 /snap_accessors.c
 /stamp-h
 /stamp-h1
