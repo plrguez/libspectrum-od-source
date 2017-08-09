@@ -425,12 +425,21 @@ libspectrum_ide_read_sector_from_hdf( libspectrum_ide_drive *drv,
       drv->data_offset + ( drv->sector_size * sector_number );
 
     /* Seek to the correct file position */
-    if( fseek( drv->disk, sector_position, SEEK_SET ) ) return 1;
+    if( fseek( drv->disk, sector_position, SEEK_SET ) ) {
+      libspectrum_print_error(
+          LIBSPECTRUM_ERROR_WARNING,
+          "Couldn't seek in HDF file\n" );
+      return 1;
+    }
 
     /* Read the packed data into a temporary buffer */
     if ( fread( packed_buf, 1, drv->sector_size, drv->disk ) !=
-	 drv->sector_size                                       )
-      return 1;		/* read error */
+	 drv->sector_size                                       ) {
+      libspectrum_print_error(
+          LIBSPECTRUM_ERROR_WARNING,
+          "Couldn't read from HDF file\n" );
+      return 1;
+    }
 
     buffer = packed_buf;
   }

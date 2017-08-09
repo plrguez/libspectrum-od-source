@@ -168,8 +168,6 @@ libspectrum_mmc_read( libspectrum_mmc_card *card )
     *(card->response_buffer_next)++ :
     0xff;
 
-  printf("libspectrum_mmc_read() -> 0x%02x\n", r);
-
   return r;
 }
 
@@ -197,8 +195,9 @@ parse_command( libspectrum_mmc_card *card, libspectrum_byte b )
       card->current_command = command;
       break;
     default:
-      printf( "Unknown MMC command %d\n", command );
-      abort();
+      libspectrum_print_error(
+          LIBSPECTRUM_ERROR_UNKNOWN, "Unknown MMC command %d received",
+          command );
       ok = 0;
       break;
   }
@@ -226,20 +225,19 @@ set_response_buffer_r7( libspectrum_mmc_card *card, libspectrum_dword value )
   card->response_buffer_end = card->response_buffer + 5;
 }
 
-static int
+static void
 read_single_block( libspectrum_mmc_card *card )
 {
-  int error;
   libspectrum_dword sector_number = 
     card->current_argument[ 3 ] +
     (card->current_argument[ 2 ] << 8) +
     (card->current_argument[ 1 ] << 16) +
     (card->current_argument[ 0 ] << 24);
 
-  error = libspectrum_ide_read_sector_from_hdf(
+  int error = libspectrum_ide_read_sector_from_hdf(
       &card->drive, card->cache, sector_number, &card->response_buffer[ 2 ]
   );
-  if( error ) return error;
+  if( error ) return;
 
   card->response_buffer[ 0 ] = card->is_idle;
   card->response_buffer[ 1 ] = 0xfe;
@@ -249,8 +247,6 @@ read_single_block( libspectrum_mmc_card *card )
 
   card->response_buffer_next = card->response_buffer;
   card->response_buffer_end = card->response_buffer + 516;
-
-  return 0;
 }
 
 static void
@@ -261,16 +257,13 @@ do_command( libspectrum_mmc_card *card )
 
   switch( card->current_command ) {
     case GO_IDLE_STATE:
-      printf("Executing GO_IDLE_STATE\n");
       card->is_idle = 1;
       set_response_buffer_r1( card );
       break;
     case SEND_IF_COND:
-      printf("Executing SEND_IF_COND\n");
       set_response_buffer_r7( card, 0x000001aa );
       break;
     case SEND_CSD:
-      printf("Executing SEND_CSD\n");
       card->response_buffer[ 0 ] = card->is_idle;
       card->response_buffer[ 1 ] = 0xfe;
 
@@ -295,7 +288,6 @@ do_command( libspectrum_mmc_card *card )
       card->response_buffer_end = card->response_buffer + 20;
       break;
     case SEND_CID:
-      printf("Executing SEND_CID\n");
       card->response_buffer[ 0 ] = card->is_idle;
       card->response_buffer[ 1 ] = 0xfe;
 
@@ -307,32 +299,29 @@ do_command( libspectrum_mmc_card *card )
       card->response_buffer_end = card->response_buffer + 20;
       break;
     case READ_SINGLE_BLOCK:
-      printf("Executing READ_SINGLE_BLOCK\n");
-      if( read_single_block( card ) ) abort();
+      read_single_block( card );
       break;
     case WRITE_BLOCK:
-      printf("Executing WRITE_BLOCK\n");
       set_response_buffer_r1( card );
       break;
     case APP_SEND_OP_COND:
-      printf("Executing APP_SEND_OP_COND\n");
       card->is_idle = 0;
       set_response_buffer_r1( card );
       break;
     case APP_CMD:
-      printf("Executing APP_CMD\n");
       set_response_buffer_r1( card );
       break;
     case READ_OCR:
-      printf("Executing READ_OCR\n");
-
       /* TODO */
       set_response_buffer_r7( card, 0xc0000000 );
-
       break;
     default:
-      printf("Attempted to execute unknown MMC command %d\n", card->current_command );
-      abort();
+      /* This should never happen as we've already filtered the commands in
+         parse_command() */
+      libspectrum_print_error(
+          LIBSPECTRUM_ERROR_LOGIC,
+          "Attempted to execute unknown MMC command %d\n",
+          card->current_command );
       break;
   }
 }
@@ -354,7 +343,6 @@ do_command_data( libspectrum_mmc_card *card )
 {
   switch( card->current_command ) {
     case WRITE_BLOCK:
-      printf("Handling WRITE_BLOCK data\n");
       write_single_block( card );
       card->response_buffer[ 0 ] = 0x05;
       card->response_buffer[ 1 ] = 0x05;
@@ -362,16 +350,18 @@ do_command_data( libspectrum_mmc_card *card )
       card->response_buffer_end = card->response_buffer + 2;
       break;
     default:
-      printf("Attempting to execute unknown MMC data command %d\n", card->current_command );
-      abort();
+      /* This should never happen as it indicates a failure in our state machine */
+      libspectrum_print_error(
+          LIBSPECTRUM_ERROR_LOGIC,
+          "Attempting to execute unknown MMC data command %d\n",
+          card->current_command );
+      break;
   }
 }
 
 void
 libspectrum_mmc_write( libspectrum_mmc_card *card, libspectrum_byte data )
 {
-  printf("libspectrum_mmc_write( 0x%02x )\n", data );
-
   switch( card->command_state ) {
     case WAITING_FOR_COMMAND:
       if( parse_command( card, data ) )
