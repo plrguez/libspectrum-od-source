@@ -326,6 +326,13 @@ libspectrum_ide_read_sector_from_hdf(
     libspectrum_byte *dest );
 
 void
+libspectrum_ide_write_sector_to_hdf(
+    libspectrum_ide_drive *drv,
+    GHashTable *cache,
+    libspectrum_dword sector_number,
+    libspectrum_byte *src );
+
+void
 libspectrum_ide_commit_drive( libspectrum_ide_drive *drv, GHashTable *cache );
 
 /* Crypto functions */

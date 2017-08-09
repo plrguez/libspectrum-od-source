@@ -340,39 +340,13 @@ do_command( libspectrum_mmc_card *card )
 static void
 write_single_block( libspectrum_mmc_card *card )
 {
-  libspectrum_ide_drive *drv = &card->drive;
-  GHashTable *cache = card->cache;
-  libspectrum_byte *buffer;
-  libspectrum_dword sector_number;
-
-  sector_number =
+  libspectrum_dword sector_number =
     card->current_argument[ 3 ] +
     (card->current_argument[ 2 ] << 8) +
     (card->current_argument[ 1 ] << 16) +
     (card->current_argument[ 0 ] << 24);
 
-  buffer = g_hash_table_lookup( cache, &sector_number );
-
-  /* Add this sector to the write cache if it's not already present */
-  if( !buffer ) {
-
-    gint *key;
-
-    key = libspectrum_new( gint, 1 );
-    buffer = libspectrum_new( libspectrum_byte, drv->sector_size );
-
-    *key = sector_number;
-    g_hash_table_insert( cache, key, buffer );
-
-  }
-
-  /* Pack or copy the data into the write cache */
-  if ( drv->sector_size == 256 ) {
-    int i;
-    for( i = 0; i < 256; i++ ) buffer[i] = card->send_buffer[ i * 2 ];
-  } else {
-    memcpy( buffer, card->send_buffer, 512 );
-  }
+  libspectrum_ide_write_sector_to_hdf( &card->drive, card->cache, sector_number, card->send_buffer );
 }
 
 static void

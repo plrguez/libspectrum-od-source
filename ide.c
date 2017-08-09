@@ -461,20 +461,13 @@ read_hdf( libspectrum_ide_channel *chn )
       chn->sector_number, chn->buffer );
 }
 
-/* Write a sector to the HDF file */
-static int
-write_hdf( libspectrum_ide_channel *chn )
+void
+libspectrum_ide_write_sector_to_hdf( libspectrum_ide_drive *drv, GHashTable *cache,
+    libspectrum_dword sector_number, libspectrum_byte *src )
 {
-  libspectrum_ide_unit selected;
-  libspectrum_ide_drive *drv;
-  GHashTable *cache;
   libspectrum_byte *buffer;
 
-  selected = chn->selected;
-  drv = &chn->drive[ selected ];
-  cache = chn->cache[ selected ];
-
-  buffer = g_hash_table_lookup( cache, &chn->sector_number );
+  buffer = g_hash_table_lookup( cache, &sector_number );
 
   /* Add this sector to the write cache if it's not already present */
   if( !buffer ) {
@@ -484,7 +477,7 @@ write_hdf( libspectrum_ide_channel *chn )
     key = libspectrum_new( gint, 1 );
     buffer = libspectrum_new( libspectrum_byte, drv->sector_size );
 
-    *key = chn->sector_number;
+    *key = sector_number;
     g_hash_table_insert( cache, key, buffer );
 
   }
@@ -492,11 +485,17 @@ write_hdf( libspectrum_ide_channel *chn )
   /* Pack or copy the data into the write cache */
   if ( drv->sector_size == 256 ) {
     int i;
-    for( i = 0; i < 256; i++ ) buffer[i] = chn->buffer[ i * 2 ];
+    for( i = 0; i < 256; i++ ) buffer[i] = src[ i * 2 ];
   } else {
-    memcpy( buffer, chn->buffer, 512 );
+    memcpy( buffer, src, 512 );
   }
+}
 
+/* Write a sector to the HDF file */
+static int
+write_hdf( libspectrum_ide_channel *chn )
+{
+  libspectrum_ide_write_sector_to_hdf( &chn->drive[ chn->selected ], chn->cache[ chn->selected ], chn->sector_number, chn->buffer );
   return 0;
 }
 
