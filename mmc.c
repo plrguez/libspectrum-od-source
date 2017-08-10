@@ -98,12 +98,9 @@ libspectrum_mmc_alloc( void )
 {
   libspectrum_mmc_card *card = libspectrum_new( libspectrum_mmc_card, 1 );
 
-  card->is_idle = 0;
-  card->command_state = WAITING_FOR_COMMAND;
-  card->response_buffer_next = card->response_buffer_end =
-    card->response_buffer;
-
   card->cache = g_hash_table_new( g_int_hash, g_int_equal );
+
+  libspectrum_mmc_reset( card );
 
   return card;
 }
@@ -148,6 +145,15 @@ void
 libspectrum_mmc_eject( libspectrum_mmc_card *card )
 {
   libspectrum_ide_eject_from_drive( &card->drive, card->cache );
+}
+
+void
+libspectrum_mmc_reset( libspectrum_mmc_card *card )
+{
+  card->is_idle = 0;
+  card->command_state = WAITING_FOR_COMMAND;
+  card->response_buffer_next = card->response_buffer;
+  card->response_buffer_end = card->response_buffer;
 }
 
 int

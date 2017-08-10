@@ -1102,6 +1102,9 @@ libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename );
 WIN32_DLL void
 libspectrum_mmc_eject( libspectrum_mmc_card *card );
 
+WIN32_DLL void
+libspectrum_mmc_reset( libspectrum_mmc_card *card );
+
 WIN32_DLL int
 libspectrum_mmc_dirty( libspectrum_mmc_card *card );
 
