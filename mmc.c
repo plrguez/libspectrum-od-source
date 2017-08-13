@@ -295,11 +295,16 @@ do_command( libspectrum_mmc_card *card )
       card->response_buffer_end = card->response_buffer + 20;
       break;
     case SEND_CID:
-      card->response_buffer[ 0 ] = card->is_idle;
-      card->response_buffer[ 1 ] = 0xfe;
+      card->response_buffer[ 0 ] = card->is_idle; /* R1 command response */
+      card->response_buffer[ 1 ] = 0xfe;          /* data token */
 
       /* For now, we return an empty CID. This seems to work. */
       memset( &card->response_buffer[ 2 ], 0x00, 16 );
+
+      /* Bit 0, not used, always 1 */
+      card->response_buffer[ 2 +  15 ] = 0x01;
+
+      /* CRC */
       memset( &card->response_buffer[ 18 ], 0x00, 2 );
 
       card->response_buffer_next = card->response_buffer;
