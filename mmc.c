@@ -130,10 +130,16 @@ libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename )
   total_sectors = (libspectrum_dword)card->drive.cylinders *
     card->drive.heads * card->drive.sectors;
 
-  /* We take C_SIZE_MULT to always be 7 for now, meaning we reduce
-     the sector count by (7+2) = 9 bits. This gives us a minimum card size
-     of 2^9 * 2^9 = 2^18 bytes = 256 Kb. Not too worried about that. */
-  c_size = (total_sectors >> 9) - 1;
+  if( card->drive.sector_size != 512 || total_sectors % 1024 ) {
+      libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
+        "Image size not supported" );
+    return LIBSPECTRUM_ERROR_UNKNOWN;
+  }
+
+  /* memory capacity = (C_SIZE+1) * 512K bytes
+     we reduce the sector count by 1024. This gives us a minimum card size
+     of 512 Kb. Not too worried about that. */
+  c_size = (total_sectors >> 10) - 1;
 
   /* We emulate an SDHC card which has a maximum C_SIZE of 16 bits */
   card->c_size = c_size >= (1 << 16) ? (1 << 16) - 1 : c_size;
@@ -271,22 +277,29 @@ do_command( libspectrum_mmc_card *card )
       set_response_buffer_r7( card, 0x000001aa );
       break;
     case SEND_CSD:
-      card->response_buffer[ 0 ] = card->is_idle;
-      card->response_buffer[ 1 ] = 0xfe;
+      card->response_buffer[ 0 ] = card->is_idle; /* R1 command response */
+      card->response_buffer[ 1 ] = 0xfe;          /* data token */
 
       memset( &card->response_buffer[ 2 ], 0x00, 16 );
+
+      /* CSD_STRUCTURE version 2.0 */
+      card->response_buffer[ 2 ] = 0x40;
+
       /* READ_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors */
       card->response_buffer[ 2 +  5 ] = 0x09;
 
-      /* C_SIZE (spread 2 bits, 8 bits, 2 bits across three bytes) */
-      card->response_buffer[ 2 +  6 ] = card->c_size >> 10;
-      card->response_buffer[ 2 +  7 ] = (card->c_size >> 2) & 0xff;
-      card->response_buffer[ 2 +  8 ] = (card->c_size & 0x03) << 6;
+      /* C_SIZE (spread 6 bits, 8 bits, 8 bits across three bytes),
+         first 6 bits set to zero */
+      card->response_buffer[ 2 +  7 ] = ( card->c_size >> 8 ) & 0xff;
+      card->response_buffer[ 2 +  8 ] = card->c_size & 0xff;
 
-      /* C_SIZE_MULT = 7 => 2 ^ (2+7) = 512x size multiplier
-         (spread 2 bits, 1 bit across two bytes) */
-      card->response_buffer[ 2 +  9 ] = 0x03;
-      card->response_buffer[ 2 + 10 ] = 0x80;
+      /* WRITE_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors
+         (spread 2 bits, 2 bits across two bytes) */
+      card->response_buffer[ 2 +  11 ] = 0x10;
+      card->response_buffer[ 2 +  12 ] = 0x01;
+
+      /* Bit 0, not used, always 1 */
+      card->response_buffer[ 2 +  15 ] = 0x01;
 
       /* CRC */
       memset( &card->response_buffer[ 18 ], 0x00, 2 );
