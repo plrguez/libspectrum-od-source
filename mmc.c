@@ -274,7 +274,8 @@ do_command( libspectrum_mmc_card *card )
       set_response_buffer_r1( card );
       break;
     case SEND_IF_COND:
-      set_response_buffer_r7( card, 0x000001aa );
+      /* return echo back pattern */
+      set_response_buffer_r7( card, 0x00000100 | card->current_argument[ 3 ] );
       break;
     case SEND_CSD:
       card->response_buffer[ 0 ] = card->is_idle; /* R1 command response */
