@@ -141,8 +141,8 @@ libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename )
      of 512 Kb. Not too worried about that. */
   c_size = (total_sectors >> 10) - 1;
 
-  /* We emulate an SDHC card which has a maximum C_SIZE of 16 bits */
-  card->c_size = c_size >= (1 << 16) ? (1 << 16) - 1 : c_size;
+  /* We emulate a SDHC card which has a maximum size of (32 Gb - 80 Mb) */
+  card->c_size = c_size >= 65375 ? 65375 : c_size;
 
   return LIBSPECTRUM_ERROR_NONE;
 }
