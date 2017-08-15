@@ -291,13 +291,13 @@ do_command( libspectrum_mmc_card *card )
 
       /* C_SIZE (spread 6 bits, 8 bits, 8 bits across three bytes),
          first 6 bits set to zero */
-      card->response_buffer[ 2 +  7 ] = ( card->c_size >> 8 ) & 0xff;
-      card->response_buffer[ 2 +  8 ] = card->c_size & 0xff;
+      card->response_buffer[ 2 +  8 ] = ( card->c_size >> 8 ) & 0xff;
+      card->response_buffer[ 2 +  9 ] = card->c_size & 0xff;
 
       /* WRITE_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors
          (spread 2 bits, 2 bits across two bytes) */
-      card->response_buffer[ 2 +  11 ] = 0x10;
-      card->response_buffer[ 2 +  12 ] = 0x01;
+      card->response_buffer[ 2 +  12 ] = 0x10;
+      card->response_buffer[ 2 +  13 ] = 0x01;
 
       /* Bit 0, not used, always 1 */
       card->response_buffer[ 2 +  15 ] = 0x01;
