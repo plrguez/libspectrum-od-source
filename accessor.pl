@@ -206,6 +206,15 @@ struct libspectrum_snap {
   libspectrum_byte* divide_eprom[ 1 ];
   libspectrum_byte* divide_ram[ SNAPSHOT_DIVIDE_PAGES ];
 
+  /* DivMMC status */
+  int divmmc_active;
+  int divmmc_eprom_writeprotect;
+  int divmmc_paged;
+  libspectrum_byte divmmc_control;
+  size_t divmmc_pages;
+  libspectrum_byte* divmmc_eprom[ 1 ];
+  libspectrum_byte* divmmc_ram[ SNAPSHOT_DIVMMC_PAGES ];
+
   /* Fuller box status */
   int fuller_box_active;
 

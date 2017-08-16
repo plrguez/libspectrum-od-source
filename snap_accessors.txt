@@ -166,6 +166,14 @@ size_t divide_pages
 libspectrum_byte* divide_eprom 1
 libspectrum_byte* divide_ram 1
 
+int divmmc_active
+int divmmc_eprom_writeprotect
+int divmmc_paged
+libspectrum_byte divmmc_control
+size_t divmmc_pages
+libspectrum_byte* divmmc_eprom 1
+libspectrum_byte* divmmc_ram 1
+
 int fuller_box_active
 
 int melodik_active
