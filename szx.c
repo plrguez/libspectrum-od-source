@@ -3890,8 +3890,17 @@ write_covx_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
 }
 
 static libspectrum_error
-write_dide_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
-                  libspectrum_snap *snap, int compress )
+write_divxxx_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
+                    libspectrum_snap *snap, int compress,
+                    const char *id,
+                    libspectrum_byte* (*get_eprom)( libspectrum_snap*, int ),
+                    int (*get_eprom_wp)( libspectrum_snap* ),
+                    libspectrum_word eprom_wp_flag,
+                    int (*get_paged)( libspectrum_snap* ),
+                    libspectrum_word paged_flag,
+                    libspectrum_word compressed_flag,
+                    libspectrum_byte (*get_control)( libspectrum_snap* ),
+                    size_t (*get_page_count)( libspectrum_snap* ) )
 {
   libspectrum_byte *eprom_data = NULL;
   libspectrum_buffer *eprom_buffer;
@@ -3899,10 +3908,9 @@ write_dide_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
   libspectrum_word uncompressed_eprom_length = 0;
   int use_compression;
 
-  eprom_data = libspectrum_snap_divide_eprom( snap, 0 );
+  eprom_data = get_eprom( snap, 0 );
   if( !eprom_data ) {
-    libspectrum_print_error( LIBSPECTRUM_ERROR_LOGIC,
-                             "DivIDE EPROM data is missing" );
+    libspectrum_print_error( LIBSPECTRUM_ERROR_LOGIC, "EPROM data is missing" );
     return LIBSPECTRUM_ERROR_LOGIC;
   }
   uncompressed_eprom_length = 0x2000;
@@ -3911,18 +3919,17 @@ write_dide_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
   use_compression = compress_data( eprom_buffer, eprom_data,
                                    uncompressed_eprom_length, compress );
 
-  if( libspectrum_snap_divide_eprom_writeprotect( snap ) )
-    flags |= ZXSTDIVIDE_EPROM_WRITEPROTECT;
-  if( libspectrum_snap_divide_paged( snap ) ) flags |= ZXSTDIVIDE_PAGED;
-  if( use_compression ) flags |= ZXSTDIVIDE_COMPRESSED;
+  if( get_eprom_wp( snap ) ) flags |= eprom_wp_flag;
+  if( get_paged( snap ) ) flags |= paged_flag;
+  if( use_compression ) flags |= compressed_flag;
   libspectrum_buffer_write_word( data, flags );
 
-  libspectrum_buffer_write_byte( data, libspectrum_snap_divide_control( snap ) );
-  libspectrum_buffer_write_byte( data, libspectrum_snap_divide_pages( snap ) );
+  libspectrum_buffer_write_byte( data, get_control( snap ) );
+  libspectrum_buffer_write_byte( data, get_page_count( snap ) );
 
   libspectrum_buffer_write_buffer( data, eprom_buffer );
 
-  write_chunk( buffer, ZXSTBID_DIVIDE, data );
+  write_chunk( buffer, id, data );
 
   libspectrum_buffer_free( eprom_buffer );
 
@@ -3930,63 +3937,60 @@ write_dide_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
 }
 
 static libspectrum_error
+write_dide_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
+                  libspectrum_snap *snap, int compress )
+{
+  return write_divxxx_chunk(
+      buffer, data, snap, compress, ZXSTBID_DIVIDE,
+      libspectrum_snap_divide_eprom,
+      libspectrum_snap_divide_eprom_writeprotect,
+      ZXSTDIVIDE_EPROM_WRITEPROTECT,
+      libspectrum_snap_divide_paged, ZXSTDIVIDE_PAGED,
+      ZXSTDIVIDE_COMPRESSED,
+      libspectrum_snap_divide_control,
+      libspectrum_snap_divide_pages );
+}
+
+static libspectrum_error
 write_dmmc_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
                   libspectrum_snap *snap, int compress )
 {
-  libspectrum_byte *eprom_data = NULL;
-  libspectrum_buffer *eprom_buffer;
-  libspectrum_word flags = 0;
-  libspectrum_word uncompressed_eprom_length = 0;
-  int use_compression;
+  return write_divxxx_chunk(
+      buffer, data, snap, compress, ZXSTBID_DIVMMC,
+      libspectrum_snap_divmmc_eprom,
+      libspectrum_snap_divmmc_eprom_writeprotect,
+      ZXSTDIVMMC_EPROM_WRITEPROTECT,
+      libspectrum_snap_divmmc_paged, ZXSTDIVMMC_PAGED,
+      ZXSTDIVMMC_COMPRESSED,
+      libspectrum_snap_divmmc_control,
+      libspectrum_snap_divmmc_pages );
+}
 
-  eprom_data = libspectrum_snap_divmmc_eprom( snap, 0 );
-  if( !eprom_data ) {
-    libspectrum_print_error( LIBSPECTRUM_ERROR_LOGIC,
-                             "DivMMC EPROM data is missing" );
-    return LIBSPECTRUM_ERROR_LOGIC;
-  }
-  uncompressed_eprom_length = 0x2000;
-
-  eprom_buffer = libspectrum_buffer_alloc();
-  use_compression = compress_data( eprom_buffer, eprom_data,
-                                   uncompressed_eprom_length, compress );
-
-  if( libspectrum_snap_divmmc_eprom_writeprotect( snap ) )
-    flags |= ZXSTDIVMMC_EPROM_WRITEPROTECT;
-  if( libspectrum_snap_divmmc_paged( snap ) ) flags |= ZXSTDIVMMC_PAGED;
-  if( use_compression ) flags |= ZXSTDIVMMC_COMPRESSED;
-  libspectrum_buffer_write_word( data, flags );
-
-  libspectrum_buffer_write_byte( data, libspectrum_snap_divmmc_control( snap ) );
-  libspectrum_buffer_write_byte( data, libspectrum_snap_divmmc_pages( snap ) );
-
-  libspectrum_buffer_write_buffer( data, eprom_buffer );
-
-  write_chunk( buffer, ZXSTBID_DIVMMC, data );
-
-  libspectrum_buffer_free( eprom_buffer );
-
-  return LIBSPECTRUM_ERROR_NONE;
+static void
+write_divxxx_ram_chunk( libspectrum_buffer *buffer,
+                        libspectrum_buffer *block_data, libspectrum_snap *snap,
+                        int page, int compress,
+                        libspectrum_byte* (*get_data)( libspectrum_snap*, int ),
+                        const char *id )
+{
+  const libspectrum_byte *data = get_data( snap, page );
+  write_ram_page( buffer, block_data, id, data, 0x2000, page, compress, 0x00 );
 }
 
 static void
 write_dirp_chunk( libspectrum_buffer *buffer, libspectrum_buffer *block_data,
                   libspectrum_snap *snap, int page, int compress )
 {
-  const libspectrum_byte *data = libspectrum_snap_divide_ram( snap, page );
-
-  write_ram_page( buffer, block_data, ZXSTBID_DIVIDERAMPAGE, data, 0x2000,
-                  page, compress, 0x00 );
+  write_divxxx_ram_chunk( buffer, block_data, snap, page, compress,
+                          libspectrum_snap_divide_ram, ZXSTBID_DIVIDERAMPAGE );
 }
 
 static void
 write_dmrp_chunk( libspectrum_buffer *buffer, libspectrum_buffer *block_data,
                   libspectrum_snap *snap, int page, int compress )
 {
-  const libspectrum_byte *data = libspectrum_snap_divmmc_ram( snap, page );
-
-  write_ram_page( buffer, block_data, ZXSTBID_DIVMMCRAMPAGE, data, 0x2000,
-                  page, compress, 0x00 );
+  write_divxxx_ram_chunk( buffer, block_data, snap, page, compress,
+                          libspectrum_snap_divmmc_ram, ZXSTBID_DIVMMCRAMPAGE );
 }
 
 static void
