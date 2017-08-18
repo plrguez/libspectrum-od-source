@@ -322,6 +322,12 @@ do_command( libspectrum_mmc_card *card )
       /* For now, we return an empty CID. This seems to work. */
       memset( &card->response_buffer[ 2 ], 0x00, 16 );
 
+      /* Set blank OID */
+      memcpy( &card->response_buffer[ 2 + 1 ], "  ", 2 );
+
+      /* Set product name */
+      memcpy( &card->response_buffer[ 2 + 3 ], "FUSE", 4 );
+
       /* Bit 0, not used, always 1 */
       card->response_buffer[ 2 +  15 ] = 0x01;
 
