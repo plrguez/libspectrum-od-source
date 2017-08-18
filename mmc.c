@@ -98,6 +98,7 @@ libspectrum_mmc_alloc( void )
 {
   libspectrum_mmc_card *card = libspectrum_new( libspectrum_mmc_card, 1 );
 
+  card->drive.disk = NULL;
   card->cache = g_hash_table_new( g_int_hash, g_int_equal );
 
   libspectrum_mmc_reset( card );
