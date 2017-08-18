@@ -152,6 +152,7 @@ void
 libspectrum_mmc_eject( libspectrum_mmc_card *card )
 {
   libspectrum_ide_eject_from_drive( &card->drive, card->cache );
+  libspectrum_mmc_reset( card );
 }
 
 void
@@ -266,9 +267,6 @@ read_single_block( libspectrum_mmc_card *card )
 static void
 do_command( libspectrum_mmc_card *card )
 {
-  /* No card inserted => no change in state */
-  if( !card->drive.disk ) return;
-
   switch( card->current_command ) {
     case GO_IDLE_STATE:
       card->is_idle = 1;
@@ -390,6 +388,9 @@ do_command_data( libspectrum_mmc_card *card )
 void
 libspectrum_mmc_write( libspectrum_mmc_card *card, libspectrum_byte data )
 {
+  /* No card inserted => no change in state */
+  if( !card->drive.disk ) return;
+
   switch( card->command_state ) {
     case WAITING_FOR_COMMAND:
       if( parse_command( card, data ) )
