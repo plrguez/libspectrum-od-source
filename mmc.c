@@ -158,7 +158,7 @@ libspectrum_mmc_eject( libspectrum_mmc_card *card )
 void
 libspectrum_mmc_reset( libspectrum_mmc_card *card )
 {
-  card->is_idle = 0;
+  card->is_idle = 1;
   card->command_state = WAITING_FOR_COMMAND;
   card->response_buffer_next = card->response_buffer;
   card->response_buffer_end = card->response_buffer;
