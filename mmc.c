@@ -91,6 +91,10 @@ typedef struct libspectrum_mmc_card {
 
   /* The next byte to be returned from response_buffer */
   libspectrum_byte *response_buffer_next;
+
+  /* CMD8/SEND_IF_COND recieved while initialising */
+  int cmd8_issued;
+
 } libspectrum_mmc_card;
 
 libspectrum_mmc_card*
@@ -162,6 +166,7 @@ libspectrum_mmc_reset( libspectrum_mmc_card *card )
   card->command_state = WAITING_FOR_COMMAND;
   card->response_buffer_next = card->response_buffer;
   card->response_buffer_end = card->response_buffer;
+  card->cmd8_issued = 0;
 }
 
 int
@@ -270,9 +275,12 @@ do_command( libspectrum_mmc_card *card )
   switch( card->current_command ) {
     case GO_IDLE_STATE:
       card->is_idle = 1;
+      card->cmd8_issued = 0;
       set_response_buffer_r1( card );
       break;
     case SEND_IF_COND:
+      card->cmd8_issued = 1;
+
       /* return echo back pattern */
       set_response_buffer_r7( card, 0x00000100 | card->current_argument[ 3 ] );
       break;
@@ -330,7 +338,13 @@ do_command( libspectrum_mmc_card *card )
       set_response_buffer_r1( card );
       break;
     case APP_SEND_OP_COND:
-      card->is_idle = 0;
+      /* SDHC cards return busy when:
+         1. CMD8 was not issued before ACMD41
+         2. ACMD41 is issued with HCS=0 (host only supports SDSC)
+      */
+      if( card->cmd8_issued && ( card->current_argument[ 0 ] & 0x40 ) ) {
+        card->is_idle = 0;
+      }
       set_response_buffer_r1( card );
       break;
     case APP_CMD:
