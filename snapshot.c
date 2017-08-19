@@ -206,6 +206,16 @@ libspectrum_snap_alloc( void )
     libspectrum_snap_set_divide_ram( snap, i, NULL );
   }
 
+  libspectrum_snap_set_divmmc_active( snap, 0 );
+  libspectrum_snap_set_divmmc_eprom_writeprotect( snap, 0 );
+  libspectrum_snap_set_divmmc_paged( snap, 0 );
+  libspectrum_snap_set_divmmc_control( snap, 0 );
+  libspectrum_snap_set_divmmc_pages( snap, 0 );
+  libspectrum_snap_set_divmmc_eprom( snap, 0, NULL );
+  for( i = 0; i < SNAPSHOT_DIVMMC_PAGES; i++ ) {
+    libspectrum_snap_set_divmmc_ram( snap, i, NULL );
+  }
+
   libspectrum_snap_set_fuller_box_active( snap, 0 );
 
   libspectrum_snap_set_melodik_active( snap, 0 );
