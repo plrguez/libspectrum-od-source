@@ -1200,6 +1200,10 @@ libspectrum_z80_write2( libspectrum_buffer *buffer, int *out_flags,
   if( libspectrum_snap_multiface_active( snap ) )
     *out_flags |= LIBSPECTRUM_FLAG_SNAPSHOT_MAJOR_INFO_LOSS;
 
+  /* .z80 format doesn't save the MMC state well */
+  if( libspectrum_snap_divmmc_active( snap ) )
+    *out_flags |= LIBSPECTRUM_FLAG_SNAPSHOT_MAJOR_INFO_LOSS;
+
   error = write_header( buffer, out_flags, snap );
   if( error != LIBSPECTRUM_ERROR_NONE ) return error;
 
