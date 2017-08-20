@@ -28,6 +28,9 @@
 
 #include "internals.h"
 
+#define IN_IDLE_STATE_MASK 0x01
+#define ILLEGAL_COMMAND_MASK 0x04
+
 /* The states while a command is being sent to the card */
 enum command_state_t {
   WAITING_FOR_COMMAND,
@@ -65,13 +68,13 @@ typedef struct libspectrum_mmc_card {
   /* The C_SIZE field of the card CSD */
   libspectrum_word c_size;
 
-  /* Is the MMC interface currently idle? */
-  int is_idle;
+  /* R1 status of current command */
+  libspectrum_byte r1_status;
 
   /* The current state of the command being transmitted to the card */
   enum command_state_t command_state;
 
-  /* The most recent command byte sent to the MMC */
+  /* The most recent command index sent to the MMC */
   libspectrum_byte current_command;
 
   /* The argument for the current MMC command */
@@ -162,7 +165,7 @@ libspectrum_mmc_eject( libspectrum_mmc_card *card )
 void
 libspectrum_mmc_reset( libspectrum_mmc_card *card )
 {
-  card->is_idle = 1;
+  card->r1_status = IN_IDLE_STATE_MASK;
   card->command_state = WAITING_FOR_COMMAND;
   card->response_buffer_next = card->response_buffer;
   card->response_buffer_end = card->response_buffer;
@@ -194,41 +197,20 @@ libspectrum_mmc_read( libspectrum_mmc_card *card )
 static int
 parse_command( libspectrum_mmc_card *card, libspectrum_byte b )
 {
-  libspectrum_byte command;
-  int ok = 1;
-
   /* All commands should have start bit == 0 and transmitter bit == 1 */
-  if( ( b & 0xc0 ) != 0x40 ) return 0;
+  if( ( b & 0xc0 ) != 0x40 ) return 0;  /* don't change current state */
 
-  command = b & 0x3f;
-
-  switch( command ) {
-    case GO_IDLE_STATE:
-    case SEND_IF_COND:
-    case SEND_CSD:
-    case SEND_CID:
-    case READ_SINGLE_BLOCK:
-    case WRITE_BLOCK:
-    case APP_SEND_OP_COND:
-    case APP_CMD:
-    case READ_OCR:
-      card->current_command = command;
-      break;
-    default:
-      libspectrum_print_error(
-          LIBSPECTRUM_ERROR_UNKNOWN, "Unknown MMC command %d received",
-          command );
-      ok = 0;
-      break;
-  }
-
-  return ok;
+  /* Unlike the SD Memory Card protocol, in the SPI mode, the card will always
+     respond to a command. The response indicates acceptance or rejection of
+     the command. Now wait for arguments and CRC */
+  card->current_command = b & 0x3f;
+  return 1;
 }
 
 static void
 set_response_buffer_r1( libspectrum_mmc_card *card )
 {
-  card->response_buffer[ 0 ] = card->is_idle;
+  card->response_buffer[ 0 ] = card->r1_status;
   card->response_buffer_next = card->response_buffer;
   card->response_buffer_end = card->response_buffer + 1;
 }
@@ -236,7 +218,7 @@ set_response_buffer_r1( libspectrum_mmc_card *card )
 static void
 set_response_buffer_r7( libspectrum_mmc_card *card, libspectrum_dword value )
 {
-  card->response_buffer[ 0 ] = card->is_idle;
+  card->response_buffer[ 0 ] = card->r1_status;
   card->response_buffer[ 1 ] = ( value & 0xff000000 ) >> 24;
   card->response_buffer[ 2 ] = ( value & 0x00ff0000 ) >> 16;
   card->response_buffer[ 3 ] = ( value & 0x0000ff00 ) >>  8;
@@ -259,7 +241,7 @@ read_single_block( libspectrum_mmc_card *card )
   );
   if( error ) return;
 
-  card->response_buffer[ 0 ] = card->is_idle;
+  card->response_buffer[ 0 ] = card->r1_status;
   card->response_buffer[ 1 ] = 0xfe;
 
   /* CRC */
@@ -274,7 +256,7 @@ do_command( libspectrum_mmc_card *card )
 {
   switch( card->current_command ) {
     case GO_IDLE_STATE:
-      card->is_idle = 1;
+      card->r1_status = IN_IDLE_STATE_MASK;
       card->cmd8_issued = 0;
       set_response_buffer_r1( card );
       break;
@@ -285,8 +267,8 @@ do_command( libspectrum_mmc_card *card )
       set_response_buffer_r7( card, 0x00000100 | card->current_argument[ 3 ] );
       break;
     case SEND_CSD:
-      card->response_buffer[ 0 ] = card->is_idle; /* R1 command response */
-      card->response_buffer[ 1 ] = 0xfe;          /* data token */
+      card->response_buffer[ 0 ] = card->r1_status; /* R1 command response */
+      card->response_buffer[ 1 ] = 0xfe;            /* data token */
 
       memset( &card->response_buffer[ 2 ], 0x00, 16 );
 
@@ -316,8 +298,8 @@ do_command( libspectrum_mmc_card *card )
       card->response_buffer_end = card->response_buffer + 20;
       break;
     case SEND_CID:
-      card->response_buffer[ 0 ] = card->is_idle; /* R1 command response */
-      card->response_buffer[ 1 ] = 0xfe;          /* data token */
+      card->response_buffer[ 0 ] = card->r1_status; /* R1 command response */
+      card->response_buffer[ 1 ] = 0xfe;            /* data token */
 
       /* For now, we return an empty CID. This seems to work. */
       memset( &card->response_buffer[ 2 ], 0x00, 16 );
@@ -349,7 +331,7 @@ do_command( libspectrum_mmc_card *card )
          2. ACMD41 is issued with HCS=0 (host only supports SDSC)
       */
       if( card->cmd8_issued && ( card->current_argument[ 0 ] & 0x40 ) ) {
-        card->is_idle = 0;
+        card->r1_status &= ~IN_IDLE_STATE_MASK;
       }
       set_response_buffer_r1( card );
       break;
@@ -362,11 +344,12 @@ do_command( libspectrum_mmc_card *card )
       set_response_buffer_r7( card, 0xc0000000 );
       break;
     default:
-      /* This should never happen as we've already filtered the commands in
-         parse_command() */
+      /* Command not implemented or illegal command */
+      card->r1_status |= ILLEGAL_COMMAND_MASK;
+      set_response_buffer_r1( card );
+
       libspectrum_print_error(
-          LIBSPECTRUM_ERROR_LOGIC,
-          "Attempted to execute unknown MMC command %d\n",
+          LIBSPECTRUM_ERROR_UNKNOWN, "Unknown MMC command %d received",
           card->current_command );
       break;
   }
@@ -426,6 +409,10 @@ libspectrum_mmc_write( libspectrum_mmc_card *card, libspectrum_byte data )
     case WAITING_FOR_CRC:
       /* We ignore the CRC */
       do_command( card );
+
+      /* reset command error flags except in_idle */
+      card->r1_status &= IN_IDLE_STATE_MASK;
+
       card->command_state = card->current_command == WRITE_BLOCK ?
         WAITING_FOR_DATA_TOKEN :
         WAITING_FOR_COMMAND;
