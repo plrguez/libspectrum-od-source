@@ -28,8 +28,9 @@
 
 #include "internals.h"
 
-#define IN_IDLE_STATE_MASK 0x01
+#define IN_IDLE_STATE_MASK   0x01
 #define ILLEGAL_COMMAND_MASK 0x04
+#define PARAMETER_ERROR_MASK 0x40
 
 /* The states while a command is being sent to the card */
 enum command_state_t {
@@ -77,6 +78,9 @@ typedef struct libspectrum_mmc_card {
 
   /* The C_SIZE field of the card CSD */
   libspectrum_word c_size;
+
+  /* The number of sectors (512 bytes) */
+  libspectrum_dword total_sectors;
 
   /* R1 status of current command */
   libspectrum_byte r1_status;
@@ -140,7 +144,7 @@ libspectrum_error
 libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename )
 {
   libspectrum_error error;
-  libspectrum_dword total_sectors, c_size;
+  libspectrum_dword c_size;
 
   libspectrum_mmc_eject( card );
   if( !filename ) return LIBSPECTRUM_ERROR_NONE;
@@ -148,10 +152,10 @@ libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename )
   error = libspectrum_ide_insert_into_drive( &card->drive, filename );
   if( error ) return error;
 
-  total_sectors = (libspectrum_dword)card->drive.cylinders *
+  card->total_sectors = (libspectrum_dword)card->drive.cylinders *
     card->drive.heads * card->drive.sectors;
 
-  if( card->drive.sector_size != 512 || total_sectors % 1024 ) {
+  if( card->drive.sector_size != 512 || card->total_sectors % 1024 ) {
       libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
         "Image size not supported" );
     return LIBSPECTRUM_ERROR_UNKNOWN;
@@ -160,10 +164,16 @@ libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename )
   /* memory capacity = (C_SIZE+1) * 512K bytes
      we reduce the sector count by 1024. This gives us a minimum card size
      of 512 Kb. Not too worried about that. */
-  c_size = (total_sectors >> 10) - 1;
+  c_size = ( card->total_sectors >> 10 ) - 1;
 
   /* We emulate a SDHC card which has a maximum size of (32 Gb - 80 Mb) */
-  card->c_size = c_size >= 65375 ? 65375 : c_size;
+  if( c_size >= 65375 ) {
+    libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
+      "Image size too big (>32 Gb)" );
+    return LIBSPECTRUM_ERROR_UNKNOWN;
+  }
+
+  card->c_size = c_size;
 
   return LIBSPECTRUM_ERROR_NONE;
 }
@@ -250,10 +260,25 @@ read_single_block( libspectrum_mmc_card *card )
     (card->current_argument[ 1 ] << 16) +
     (card->current_argument[ 0 ] << 24);
 
+  /* Sector out of range */
+  if( sector_number >= card->total_sectors ) {
+    card->r1_status |= PARAMETER_ERROR_MASK;
+    set_response_buffer_r1( card );
+    return;
+  }
+
   int error = libspectrum_ide_read_sector_from_hdf(
       &card->drive, card->cache, sector_number, &card->response_buffer[ 2 ]
   );
-  if( error ) return;
+
+  /* Data retrieval error */
+  if( error ) {
+    card->response_buffer[ 0 ] = card->r1_status; /* R1 command response */
+    card->response_buffer[ 1 ] = 0x01;            /* data error token */
+    card->response_buffer_next = card->response_buffer;
+    card->response_buffer_end = card->response_buffer + 2;
+    return;
+  }
 
   card->response_buffer[ 0 ] = card->r1_status;
   card->response_buffer[ 1 ] = 0xfe;
@@ -426,7 +451,20 @@ write_single_block( libspectrum_mmc_card *card )
     (card->current_argument[ 1 ] << 16) +
     (card->current_argument[ 0 ] << 24);
 
-  libspectrum_ide_write_sector_to_hdf( &card->drive, card->cache, sector_number, card->send_buffer );
+  /* Sector out of range */
+  if( sector_number >= card->total_sectors ) {
+    card->r1_status |= PARAMETER_ERROR_MASK;
+    set_response_buffer_r1( card );
+    return;
+  }
+
+  libspectrum_ide_write_sector_to_hdf( &card->drive, card->cache, sector_number,
+                                       card->send_buffer );
+
+  card->response_buffer[ 0 ] = 0x05; /* data response */
+  card->response_buffer[ 1 ] = 0x01; /* busy flag (end of programming) */
+  card->response_buffer_next = card->response_buffer;
+  card->response_buffer_end = card->response_buffer + 2;
 }
 
 static void
@@ -435,10 +473,6 @@ do_command_data( libspectrum_mmc_card *card )
   switch( card->current_command ) {
     case WRITE_BLOCK:
       write_single_block( card );
-      card->response_buffer[ 0 ] = 0x05;
-      card->response_buffer[ 1 ] = 0x05;
-      card->response_buffer_next = card->response_buffer;
-      card->response_buffer_end = card->response_buffer + 2;
       break;
     default:
       /* This should never happen as it indicates a failure in our state machine */
