@@ -53,9 +53,19 @@ enum command_byte {
   SEND_CID = 10,
   READ_SINGLE_BLOCK = 17,
   WRITE_BLOCK = 24,
-  APP_SEND_OP_COND = 41,
   APP_CMD = 55,
   READ_OCR = 58
+};
+
+/* Application specific commands, only some implemented
+   but needed for command identification */
+enum application_command_byte {
+  SD_STATUS = 13,
+  SEND_NUM_WR_BLOCKS = 22,
+  SET_WR_BLK_ERASE_COUNT = 23,
+  SD_SEND_OP_COND = 41,
+  SET_CLR_CARD_DETECT = 42,
+  SEND_SCR = 51,
 };
 
 typedef struct libspectrum_mmc_card {
@@ -97,6 +107,9 @@ typedef struct libspectrum_mmc_card {
 
   /* CMD8/SEND_IF_COND recieved while initialising */
   int cmd8_issued;
+
+  /* CMD55/APP_CMD issued so next command is application specific */
+  int cmd55_issued;
 
 } libspectrum_mmc_card;
 
@@ -170,6 +183,7 @@ libspectrum_mmc_reset( libspectrum_mmc_card *card )
   card->response_buffer_next = card->response_buffer;
   card->response_buffer_end = card->response_buffer;
   card->cmd8_issued = 0;
+  card->cmd55_issued = 0;
 }
 
 int
@@ -251,8 +265,48 @@ read_single_block( libspectrum_mmc_card *card )
   card->response_buffer_end = card->response_buffer + 516;
 }
 
+static int
+do_application_command( libspectrum_mmc_card *card )
+{
+  int is_acmd = 1;
+
+  switch( card->current_command ) {
+    case SD_STATUS:
+    case SEND_NUM_WR_BLOCKS:
+    case SET_WR_BLK_ERASE_COUNT:
+    case SET_CLR_CARD_DETECT:
+    case SEND_SCR:
+      /* Application command not implemented, return illegal command for now */
+      card->r1_status |= ILLEGAL_COMMAND_MASK;
+      set_response_buffer_r1( card );
+
+      libspectrum_print_error(
+          LIBSPECTRUM_ERROR_UNKNOWN,
+          "Unknown MMC application command %d received",
+          card->current_command );
+      break;
+
+    case SD_SEND_OP_COND:
+      /* SDHC cards return in_idle_state=1 when:
+         1. CMD8 was not issued before ACMD41
+         2. ACMD41 is issued with HCS=0 (host only supports SDSC)
+      */
+      if( card->cmd8_issued && ( card->current_argument[ 0 ] & 0x40 ) ) {
+        card->r1_status &= ~IN_IDLE_STATE_MASK;
+      }
+      set_response_buffer_r1( card );
+      break;
+
+    default:
+      is_acmd = 0;
+      break;
+  }
+
+  return is_acmd;
+}
+
 static void
-do_command( libspectrum_mmc_card *card )
+do_standard_command( libspectrum_mmc_card *card )
 {
   switch( card->current_command ) {
     case GO_IDLE_STATE:
@@ -325,17 +379,8 @@ do_command( libspectrum_mmc_card *card )
     case WRITE_BLOCK:
       set_response_buffer_r1( card );
       break;
-    case APP_SEND_OP_COND:
-      /* SDHC cards return busy when:
-         1. CMD8 was not issued before ACMD41
-         2. ACMD41 is issued with HCS=0 (host only supports SDSC)
-      */
-      if( card->cmd8_issued && ( card->current_argument[ 0 ] & 0x40 ) ) {
-        card->r1_status &= ~IN_IDLE_STATE_MASK;
-      }
-      set_response_buffer_r1( card );
-      break;
     case APP_CMD:
+      card->cmd55_issued = 1;
       set_response_buffer_r1( card );
       break;
     case READ_OCR:
@@ -353,6 +398,23 @@ do_command( libspectrum_mmc_card *card )
           card->current_command );
       break;
   }
+}
+
+static void
+do_command( libspectrum_mmc_card *card )
+{
+  /* Previous APP_CMD indicates to the card that the next command is an
+     application specific command rather than a standard command */
+  if( card->cmd55_issued ) {
+    card->cmd55_issued = 0;
+
+    /* If a non-ACMD is sent, then it is respected by the card as a normal
+       SD Memory Card command */
+    if( do_application_command( card ) )
+      return;
+  }
+
+  do_standard_command( card );
 }
 
 static void
