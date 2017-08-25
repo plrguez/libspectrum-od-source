@@ -254,7 +254,16 @@ set_response_buffer_r7( libspectrum_mmc_card *card, libspectrum_dword value )
 static void
 read_single_block( libspectrum_mmc_card *card )
 {
-  libspectrum_dword sector_number = 
+  libspectrum_dword sector_number;
+
+  /* Card initialised? */
+  if( card->r1_status & IN_IDLE_STATE_MASK ) {
+    card->r1_status |= ILLEGAL_COMMAND_MASK;
+    set_response_buffer_r1( card );
+    return;
+  }
+
+  sector_number =
     card->current_argument[ 3 ] +
     (card->current_argument[ 2 ] << 8) +
     (card->current_argument[ 1 ] << 16) +
@@ -288,6 +297,79 @@ read_single_block( libspectrum_mmc_card *card )
 
   card->response_buffer_next = card->response_buffer;
   card->response_buffer_end = card->response_buffer + 516;
+}
+
+static void
+send_csd( libspectrum_mmc_card *card )
+{
+  /* Card initialised? */
+  if( card->r1_status & IN_IDLE_STATE_MASK ) {
+    card->r1_status |= ILLEGAL_COMMAND_MASK;
+    set_response_buffer_r1( card );
+    return;
+  }
+
+  card->response_buffer[ 0 ] = card->r1_status; /* R1 command response */
+  card->response_buffer[ 1 ] = 0xfe;            /* data token */
+
+  memset( &card->response_buffer[ 2 ], 0x00, 16 );
+
+  /* CSD_STRUCTURE version 2.0 */
+  card->response_buffer[ 2 ] = 0x40;
+
+  /* READ_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors */
+  card->response_buffer[ 2 +  5 ] = 0x09;
+
+  /* C_SIZE (spread 6 bits, 8 bits, 8 bits across three bytes),
+     first 6 bits set to zero */
+  card->response_buffer[ 2 +  8 ] = ( card->c_size >> 8 ) & 0xff;
+  card->response_buffer[ 2 +  9 ] = card->c_size & 0xff;
+
+  /* WRITE_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors
+     (spread 2 bits, 2 bits across two bytes) */
+  card->response_buffer[ 2 +  12 ] = 0x10;
+  card->response_buffer[ 2 +  13 ] = 0x01;
+
+  /* Bit 0, not used, always 1 */
+  card->response_buffer[ 2 +  15 ] = 0x01;
+
+  /* CRC */
+  memset( &card->response_buffer[ 18 ], 0x00, 2 );
+
+  card->response_buffer_next = card->response_buffer;
+  card->response_buffer_end = card->response_buffer + 20;
+}
+
+static void
+send_cid( libspectrum_mmc_card *card )
+{
+  /* Card initialised? */
+  if( card->r1_status & IN_IDLE_STATE_MASK ) {
+    card->r1_status |= ILLEGAL_COMMAND_MASK;
+    set_response_buffer_r1( card );
+    return;
+  }
+
+  card->response_buffer[ 0 ] = card->r1_status; /* R1 command response */
+  card->response_buffer[ 1 ] = 0xfe;            /* data token */
+
+  /* For now, we return an empty CID. This seems to work. */
+  memset( &card->response_buffer[ 2 ], 0x00, 16 );
+
+  /* Set blank OID */
+  memcpy( &card->response_buffer[ 2 + 1 ], "  ", 2 );
+
+  /* Set product name */
+  memcpy( &card->response_buffer[ 2 + 3 ], "FUSE", 4 );
+
+  /* Bit 0, not used, always 1 */
+  card->response_buffer[ 2 +  15 ] = 0x01;
+
+  /* CRC */
+  memset( &card->response_buffer[ 18 ], 0x00, 2 );
+
+  card->response_buffer_next = card->response_buffer;
+  card->response_buffer_end = card->response_buffer + 20;
 }
 
 static int
@@ -346,57 +428,10 @@ do_standard_command( libspectrum_mmc_card *card )
       set_response_buffer_r7( card, 0x00000100 | card->current_argument[ 3 ] );
       break;
     case SEND_CSD:
-      card->response_buffer[ 0 ] = card->r1_status; /* R1 command response */
-      card->response_buffer[ 1 ] = 0xfe;            /* data token */
-
-      memset( &card->response_buffer[ 2 ], 0x00, 16 );
-
-      /* CSD_STRUCTURE version 2.0 */
-      card->response_buffer[ 2 ] = 0x40;
-
-      /* READ_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors */
-      card->response_buffer[ 2 +  5 ] = 0x09;
-
-      /* C_SIZE (spread 6 bits, 8 bits, 8 bits across three bytes),
-         first 6 bits set to zero */
-      card->response_buffer[ 2 +  8 ] = ( card->c_size >> 8 ) & 0xff;
-      card->response_buffer[ 2 +  9 ] = card->c_size & 0xff;
-
-      /* WRITE_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors
-         (spread 2 bits, 2 bits across two bytes) */
-      card->response_buffer[ 2 +  12 ] = 0x10;
-      card->response_buffer[ 2 +  13 ] = 0x01;
-
-      /* Bit 0, not used, always 1 */
-      card->response_buffer[ 2 +  15 ] = 0x01;
-
-      /* CRC */
-      memset( &card->response_buffer[ 18 ], 0x00, 2 );
-
-      card->response_buffer_next = card->response_buffer;
-      card->response_buffer_end = card->response_buffer + 20;
+      send_csd( card );
       break;
     case SEND_CID:
-      card->response_buffer[ 0 ] = card->r1_status; /* R1 command response */
-      card->response_buffer[ 1 ] = 0xfe;            /* data token */
-
-      /* For now, we return an empty CID. This seems to work. */
-      memset( &card->response_buffer[ 2 ], 0x00, 16 );
-
-      /* Set blank OID */
-      memcpy( &card->response_buffer[ 2 + 1 ], "  ", 2 );
-
-      /* Set product name */
-      memcpy( &card->response_buffer[ 2 + 3 ], "FUSE", 4 );
-
-      /* Bit 0, not used, always 1 */
-      card->response_buffer[ 2 +  15 ] = 0x01;
-
-      /* CRC */
-      memset( &card->response_buffer[ 18 ], 0x00, 2 );
-
-      card->response_buffer_next = card->response_buffer;
-      card->response_buffer_end = card->response_buffer + 20;
+      send_cid( card );
       break;
     case READ_SINGLE_BLOCK:
       read_single_block( card );
@@ -445,7 +480,16 @@ do_command( libspectrum_mmc_card *card )
 static void
 write_single_block( libspectrum_mmc_card *card )
 {
-  libspectrum_dword sector_number =
+  libspectrum_dword sector_number;
+
+  /* Card initialised? */
+  if( card->r1_status & IN_IDLE_STATE_MASK ) {
+    card->r1_status |= ILLEGAL_COMMAND_MASK;
+    set_response_buffer_r1( card );
+    return;
+  }
+
+  sector_number =
     card->current_argument[ 3 ] +
     (card->current_argument[ 2 ] << 8) +
     (card->current_argument[ 1 ] << 16) +
