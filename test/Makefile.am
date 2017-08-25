@@ -23,6 +23,7 @@ noinst_PROGRAMS += test/test
 
 test_test_SOURCES = \
 	test/edges.c \
+	test/szx.c \
 	test/test.c \
 	test/test_edges.c
 
