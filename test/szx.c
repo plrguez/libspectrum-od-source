@@ -389,3 +389,23 @@ test_39( void )
   return szx_block_test( "ZXCF", LIBSPECTRUM_MACHINE_48, zxcf_setter,
       test_39_expected, ARRAY_SIZE(test_39_expected) );
 }
+
+static void
+amxm_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_kempston_mouse_active( snap, 1 );
+}
+
+static libspectrum_byte
+test_40_expected[] = {
+  0x02, /* Kempston mouse */
+  0x00, 0x00, 0x00, /* AMX mouse CTRLA registers */
+  0x00, 0x00, 0x00 /* AMX mouse CTRLB registers */
+};
+
+test_return_t
+test_40( void )
+{
+  return szx_block_test( "AMXM", LIBSPECTRUM_MACHINE_48, amxm_setter,
+      test_40_expected, ARRAY_SIZE(test_40_expected) );
+}
