@@ -282,3 +282,38 @@ test_35( void )
   return szx_block_test( "ZXPR", LIBSPECTRUM_MACHINE_48, zxpr_setter,
       test_35_expected, ARRAY_SIZE(test_35_expected) );
 }
+
+static libspectrum_byte
+ay_registers_data[] = {
+  0x73, 0x03, 0xb1, 0x00, 0xbb, 0x0c, 0x19, 0x0f,
+  0x1e, 0x07, 0x11, 0x71, 0x6c, 0x0a, 0x2b, 0x41
+};
+
+static void
+ay_setter( libspectrum_snap *snap )
+{
+  size_t i;
+
+  libspectrum_snap_set_fuller_box_active( snap, 1 );
+  libspectrum_snap_set_melodik_active( snap, 0 );
+  libspectrum_snap_set_out_ay_registerport( snap, 0x08 );
+
+  for( i = 0; i < 16; i++ ) {
+    libspectrum_snap_set_ay_registers( snap, i, ay_registers_data[i] );
+  }
+}
+
+static libspectrum_byte
+test_36_expected[] = {
+  0x01, /* Flags */
+  0x08, /* Register port */
+  0x73, 0x03, 0xb1, 0x00, 0xbb, 0x0c, 0x19, 0x0f, /* Registers 0x00 - 0x07 */
+  0x1e, 0x07, 0x11, 0x71, 0x6c, 0x0a, 0x2b, 0x41 /* Register 0x08 - 0x0f */
+};
+
+test_return_t
+test_36( void )
+{
+  return szx_block_test( "AY\0\0", LIBSPECTRUM_MACHINE_48, ay_setter,
+      test_36_expected, ARRAY_SIZE(test_36_expected) );
+}
