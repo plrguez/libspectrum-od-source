@@ -365,3 +365,27 @@ test_38( void )
   return szx_block_test( "ZXAT", LIBSPECTRUM_MACHINE_48, zxat_setter,
       test_38_expected, ARRAY_SIZE(test_38_expected) );
 }
+
+static void
+zxcf_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_zxcf_active( snap, 1 );
+
+  libspectrum_snap_set_zxcf_upload( snap, 1 );
+  libspectrum_snap_set_zxcf_memctl( snap, 0x37 );
+  libspectrum_snap_set_zxcf_pages( snap, 0x55 );
+}
+
+static libspectrum_byte
+test_39_expected[] = {
+  0x01, 0x00, /* Flags */
+  0x37, /* Memory control */
+  0x55 /* Page count */
+};
+
+test_return_t
+test_39( void )
+{
+  return szx_block_test( "ZXCF", LIBSPECTRUM_MACHINE_48, zxcf_setter,
+      test_39_expected, ARRAY_SIZE(test_39_expected) );
+}
