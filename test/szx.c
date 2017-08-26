@@ -317,3 +317,22 @@ test_36( void )
   return szx_block_test( "AY\0\0", LIBSPECTRUM_MACHINE_48, ay_setter,
       test_36_expected, ARRAY_SIZE(test_36_expected) );
 }
+
+static void
+scld_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_out_scld_hsr( snap, 0x49 );
+  libspectrum_snap_set_out_scld_dec( snap, 0x9d );
+}
+
+static libspectrum_byte
+test_37_expected[] = {
+  0x49, 0x9d
+};
+
+test_return_t
+test_37( void )
+{
+  return szx_block_test( "SCLD", LIBSPECTRUM_MACHINE_TC2048, scld_setter,
+      test_37_expected, ARRAY_SIZE(test_37_expected) );
+}
