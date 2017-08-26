@@ -96,7 +96,7 @@ find_szx_chunk( libspectrum_buffer *buffer, const char *search )
 }
 
 static test_return_t
-szx_block_test( const char *id, libspectrum_machine machine,
+szx_write_block_test( const char *id, libspectrum_machine machine,
     void (*setter)( libspectrum_snap* ),
     libspectrum_byte *expected, size_t expected_length )
 {
@@ -192,7 +192,7 @@ test_31_expected[] = {
 test_return_t
 test_31( void )
 {
-  return szx_block_test( "Z80R", LIBSPECTRUM_MACHINE_48, z80r_setter,
+  return szx_write_block_test( "Z80R", LIBSPECTRUM_MACHINE_48, z80r_setter,
       test_31_expected, ARRAY_SIZE(test_31_expected) );
 }
 
@@ -213,7 +213,7 @@ test_32_expected[] = {
 test_return_t
 test_32( void )
 {
-  return szx_block_test( "SPCR", LIBSPECTRUM_MACHINE_PLUS3, spcr_setter,
+  return szx_write_block_test( "SPCR", LIBSPECTRUM_MACHINE_PLUS3, spcr_setter,
       test_32_expected, ARRAY_SIZE(test_32_expected) );
 }
 
@@ -238,7 +238,7 @@ test_33_expected[] = {
 test_return_t
 test_33( void )
 {
-  return szx_block_test( "JOY\0", LIBSPECTRUM_MACHINE_48, joy_setter,
+  return szx_write_block_test( "JOY\0", LIBSPECTRUM_MACHINE_48, joy_setter,
       test_33_expected, ARRAY_SIZE(test_33_expected) );
 }
 
@@ -261,7 +261,7 @@ test_34_expected[] = {
 test_return_t
 test_34( void )
 {
-  return szx_block_test( "KEYB", LIBSPECTRUM_MACHINE_48, keyb_setter,
+  return szx_write_block_test( "KEYB", LIBSPECTRUM_MACHINE_48, keyb_setter,
       test_34_expected, ARRAY_SIZE(test_34_expected) );
 }
 
@@ -279,7 +279,7 @@ test_35_expected[] = {
 test_return_t
 test_35( void )
 {
-  return szx_block_test( "ZXPR", LIBSPECTRUM_MACHINE_48, zxpr_setter,
+  return szx_write_block_test( "ZXPR", LIBSPECTRUM_MACHINE_48, zxpr_setter,
       test_35_expected, ARRAY_SIZE(test_35_expected) );
 }
 
@@ -314,7 +314,7 @@ test_36_expected[] = {
 test_return_t
 test_36( void )
 {
-  return szx_block_test( "AY\0\0", LIBSPECTRUM_MACHINE_48, ay_setter,
+  return szx_write_block_test( "AY\0\0", LIBSPECTRUM_MACHINE_48, ay_setter,
       test_36_expected, ARRAY_SIZE(test_36_expected) );
 }
 
@@ -333,7 +333,7 @@ test_37_expected[] = {
 test_return_t
 test_37( void )
 {
-  return szx_block_test( "SCLD", LIBSPECTRUM_MACHINE_TC2048, scld_setter,
+  return szx_write_block_test( "SCLD", LIBSPECTRUM_MACHINE_TC2048, scld_setter,
       test_37_expected, ARRAY_SIZE(test_37_expected) );
 }
 
@@ -362,7 +362,7 @@ test_38_expected[] = {
 test_return_t
 test_38( void )
 {
-  return szx_block_test( "ZXAT", LIBSPECTRUM_MACHINE_48, zxat_setter,
+  return szx_write_block_test( "ZXAT", LIBSPECTRUM_MACHINE_48, zxat_setter,
       test_38_expected, ARRAY_SIZE(test_38_expected) );
 }
 
@@ -386,7 +386,7 @@ test_39_expected[] = {
 test_return_t
 test_39( void )
 {
-  return szx_block_test( "ZXCF", LIBSPECTRUM_MACHINE_48, zxcf_setter,
+  return szx_write_block_test( "ZXCF", LIBSPECTRUM_MACHINE_48, zxcf_setter,
       test_39_expected, ARRAY_SIZE(test_39_expected) );
 }
 
@@ -406,7 +406,7 @@ test_40_expected[] = {
 test_return_t
 test_40( void )
 {
-  return szx_block_test( "AMXM", LIBSPECTRUM_MACHINE_48, amxm_setter,
+  return szx_write_block_test( "AMXM", LIBSPECTRUM_MACHINE_48, amxm_setter,
       test_40_expected, ARRAY_SIZE(test_40_expected) );
 }
 
@@ -422,7 +422,7 @@ test_41_expected[] = { /* Empty */ };
 test_return_t
 test_41( void )
 {
-  return szx_block_test( "SIDE", LIBSPECTRUM_MACHINE_48, side_setter,
+  return szx_write_block_test( "SIDE", LIBSPECTRUM_MACHINE_48, side_setter,
       test_41_expected, ARRAY_SIZE(test_41_expected) );
 }
 
@@ -441,7 +441,7 @@ test_42_expected[] = {
 test_return_t
 test_42( void )
 {
-  return szx_block_test( "DRUM", LIBSPECTRUM_MACHINE_48, drum_setter,
+  return szx_write_block_test( "DRUM", LIBSPECTRUM_MACHINE_48, drum_setter,
       test_42_expected, ARRAY_SIZE(test_42_expected) );
 }
 
@@ -461,18 +461,21 @@ test_43_expected[] = {
 test_return_t
 test_43( void )
 {
-  return szx_block_test( "COVX", LIBSPECTRUM_MACHINE_48, covx_setter,
+  return szx_write_block_test( "COVX", LIBSPECTRUM_MACHINE_48, covx_setter,
       test_43_expected, ARRAY_SIZE(test_43_expected) );
 }
 
-test_return_t
-test_44( void )
+static test_return_t
+szx_read_block_test( const char *id, int (*check_fn)( libspectrum_snap* ) )
 {
-  const char *filename = STATIC_TEST_PATH( "szx-chunks/Z80R.szx" );
+  const char *filename_template = STATIC_TEST_PATH( "szx-chunks/%s.szx" );
+  char filename[ 256 ];
   libspectrum_byte *buffer = NULL;
   size_t filesize = 0;
   libspectrum_snap *snap;
   int failed = 0;
+
+  snprintf( filename, 256, filename_template, id );
 
   if( read_file( &buffer, &filesize, filename ) ) return TEST_INCOMPLETE;
 
@@ -487,6 +490,18 @@ test_44( void )
   }
 
   libspectrum_free( buffer );
+
+  failed = check_fn( snap );
+
+  libspectrum_snap_free( snap );
+
+  return failed ? TEST_FAIL : TEST_PASS;
+}
+
+static int
+test_44_check( libspectrum_snap *snap )
+{
+  int failed = 0;
 
   if( libspectrum_snap_a( snap ) != 0xc4 ) failed = 1;
 
@@ -521,39 +536,29 @@ test_44( void )
 
   if( libspectrum_snap_memptr( snap ) != 0xdc03 ) failed = 1;
 
-  libspectrum_snap_free( snap );
-
-  return failed ? TEST_FAIL : TEST_PASS;
+  return failed;
 }
 
 test_return_t
-test_45( void )
+test_44( void )
 {
-  const char *filename = STATIC_TEST_PATH( "szx-chunks/SPCR.szx" );
-  libspectrum_byte *buffer = NULL;
-  size_t filesize = 0;
-  libspectrum_snap *snap;
+  return szx_read_block_test( "Z80R", test_44_check );
+}
+
+static int
+test_45_check( libspectrum_snap *snap )
+{
   int failed = 0;
-
-  if( read_file( &buffer, &filesize, filename ) ) return TEST_INCOMPLETE;
-
-  snap = libspectrum_snap_alloc();
-
-  if( libspectrum_snap_read( snap, buffer, filesize, LIBSPECTRUM_ID_UNKNOWN,
-			     filename ) != LIBSPECTRUM_ERROR_NONE ) {
-    fprintf( stderr, "%s: error reading `%s'\n", progname, filename );
-    libspectrum_snap_free( snap );
-    libspectrum_free( buffer );
-    return TEST_INCOMPLETE;
-  }
-
-  libspectrum_free( buffer );
 
   if( libspectrum_snap_out_ula( snap ) != 0xfa ) failed = 1;
   if( libspectrum_snap_out_128_memoryport( snap ) != 0x6f ) failed = 1;
   if( libspectrum_snap_out_plus3_memoryport( snap ) != 0x28 ) failed = 1;
 
-  libspectrum_snap_free( snap );
+  return failed;
+}
 
-  return failed ? TEST_FAIL : TEST_PASS;
+test_return_t
+test_45( void )
+{
+  return szx_read_block_test( "SPCR", test_45_check );
 }
