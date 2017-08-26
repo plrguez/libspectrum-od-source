@@ -241,3 +241,26 @@ test_33( void )
   return szx_block_test( "JOY\0", LIBSPECTRUM_MACHINE_48, joy_setter,
       test_33_expected, ARRAY_SIZE(test_33_expected) );
 }
+
+static void
+keyb_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_issue2( snap, 1 );
+  libspectrum_snap_set_joystick_active_count( snap, 1 );
+  libspectrum_snap_set_joystick_list( snap, 0, LIBSPECTRUM_JOYSTICK_CURSOR );
+  libspectrum_snap_set_joystick_inputs( snap, 0,
+      LIBSPECTRUM_JOYSTICK_INPUT_KEYBOARD );
+}
+
+static libspectrum_byte
+test_34_expected[] = {
+  0x01, 0x00, 0x00, 0x00, /* Flags */
+  0x02 /* Cursor joystick */
+};
+
+test_return_t
+test_34( void )
+{
+  return szx_block_test( "KEYB", LIBSPECTRUM_MACHINE_48, keyb_setter,
+      test_34_expected, ARRAY_SIZE(test_34_expected) );
+}
