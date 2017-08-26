@@ -216,3 +216,28 @@ test_32( void )
   return szx_block_test( "SPCR", LIBSPECTRUM_MACHINE_PLUS3, spcr_setter,
       test_32_expected, ARRAY_SIZE(test_32_expected) );
 }
+
+static void
+joy_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_joystick_active_count( snap, 2 );
+  libspectrum_snap_set_joystick_list( snap, 0, LIBSPECTRUM_JOYSTICK_KEMPSTON );
+  libspectrum_snap_set_joystick_inputs( snap, 0,
+      LIBSPECTRUM_JOYSTICK_INPUT_JOYSTICK_1 );
+  libspectrum_snap_set_joystick_list( snap, 1, LIBSPECTRUM_JOYSTICK_SINCLAIR_1 );
+  libspectrum_snap_set_joystick_inputs( snap, 1,
+      LIBSPECTRUM_JOYSTICK_INPUT_JOYSTICK_2 );
+}
+
+static libspectrum_byte
+test_33_expected[] = {
+  0x01, 0x00, 0x00, 0x00, /* Flags */
+  0x00, 0x03 /* Joystick 1 = Kempston, Joystick 2 = Sinclair 1 */
+};
+
+test_return_t
+test_33( void )
+{
+  return szx_block_test( "JOY\0", LIBSPECTRUM_MACHINE_48, joy_setter,
+      test_33_expected, ARRAY_SIZE(test_33_expected) );
+}
