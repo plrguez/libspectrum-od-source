@@ -464,3 +464,64 @@ test_43( void )
   return szx_block_test( "COVX", LIBSPECTRUM_MACHINE_48, covx_setter,
       test_43_expected, ARRAY_SIZE(test_43_expected) );
 }
+
+test_return_t
+test_44( void )
+{
+  const char *filename = STATIC_TEST_PATH( "szx-chunks/Z80R.szx" );
+  libspectrum_byte *buffer = NULL;
+  size_t filesize = 0;
+  libspectrum_snap *snap;
+  int failed = 0;
+
+  if( read_file( &buffer, &filesize, filename ) ) return TEST_INCOMPLETE;
+
+  snap = libspectrum_snap_alloc();
+
+  if( libspectrum_snap_read( snap, buffer, filesize, LIBSPECTRUM_ID_UNKNOWN,
+			     filename ) != LIBSPECTRUM_ERROR_NONE ) {
+    fprintf( stderr, "%s: error reading `%s'\n", progname, filename );
+    libspectrum_snap_free( snap );
+    libspectrum_free( buffer );
+    return TEST_INCOMPLETE;
+  }
+
+  libspectrum_free( buffer );
+
+  if( libspectrum_snap_a( snap ) != 0xc4 ) failed = 1;
+
+  if( libspectrum_snap_a( snap ) != 0xc4 ) failed = 1;
+  if( libspectrum_snap_f( snap ) != 0x1f ) failed = 1;
+  if( libspectrum_snap_bc( snap ) != 0x0306 ) failed = 1;
+  if( libspectrum_snap_de( snap ) != 0x06e4 ) failed = 1;
+  if( libspectrum_snap_hl( snap ) != 0x0154 ) failed = 1;
+
+  if( libspectrum_snap_a_( snap ) != 0x69 ) failed = 1;
+  if( libspectrum_snap_f_( snap ) != 0x07 ) failed = 1;
+  if( libspectrum_snap_bc_( snap ) != 0xe7dc ) failed = 1;
+  if( libspectrum_snap_de_( snap ) != 0xc3d0 ) failed = 1;
+  if( libspectrum_snap_hl_( snap ) != 0xdccb ) failed = 1;
+
+  if( libspectrum_snap_ix( snap ) != 0x8ba3 ) failed = 1;
+  if( libspectrum_snap_iy( snap ) != 0x1c13 ) failed = 1;
+  if( libspectrum_snap_sp( snap ) != 0xf86d ) failed = 1;
+  if( libspectrum_snap_pc( snap ) != 0xc81e ) failed = 1;
+
+  if( libspectrum_snap_i( snap ) != 0x19 ) failed = 1;
+  if( libspectrum_snap_r( snap ) != 0x84 ) failed = 1;
+  if( libspectrum_snap_iff1( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_iff2( snap ) != 0 ) failed = 1;
+  if( libspectrum_snap_im( snap ) != 2 ) failed = 1;
+
+  if( libspectrum_snap_tstates( snap ) != 40 ) failed = 1;
+
+  if( libspectrum_snap_last_instruction_ei( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_halted( snap ) != 0 ) failed = 1;
+  if( libspectrum_snap_last_instruction_set_f( snap ) != 1 ) failed = 1;
+
+  if( libspectrum_snap_memptr( snap ) != 0xdc03 ) failed = 1;
+
+  libspectrum_snap_free( snap );
+
+  return failed ? TEST_FAIL : TEST_PASS;
+}

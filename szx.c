@@ -1434,9 +1434,9 @@ read_z80r_chunk( libspectrum_snap *snap, libspectrum_word version,
     (*buffer)++;		/* Skip chHoldIntReqCycles */
     
     /* Flags */
-    libspectrum_snap_set_last_instruction_ei( snap, **buffer & ZXSTZF_EILAST );
-    libspectrum_snap_set_halted( snap, **buffer & ZXSTZF_HALTED );
-    libspectrum_snap_set_last_instruction_set_f( snap, **buffer & ZXSTZF_FSET );
+    libspectrum_snap_set_last_instruction_ei( snap, !!(**buffer & ZXSTZF_EILAST) );
+    libspectrum_snap_set_halted( snap, !!(**buffer & ZXSTZF_HALTED) );
+    libspectrum_snap_set_last_instruction_set_f( snap, !!(**buffer & ZXSTZF_FSET) );
     (*buffer)++;
 
     if( version >= 0x0104 ) {
