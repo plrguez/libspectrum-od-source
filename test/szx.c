@@ -525,3 +525,35 @@ test_44( void )
 
   return failed ? TEST_FAIL : TEST_PASS;
 }
+
+test_return_t
+test_45( void )
+{
+  const char *filename = STATIC_TEST_PATH( "szx-chunks/SPCR.szx" );
+  libspectrum_byte *buffer = NULL;
+  size_t filesize = 0;
+  libspectrum_snap *snap;
+  int failed = 0;
+
+  if( read_file( &buffer, &filesize, filename ) ) return TEST_INCOMPLETE;
+
+  snap = libspectrum_snap_alloc();
+
+  if( libspectrum_snap_read( snap, buffer, filesize, LIBSPECTRUM_ID_UNKNOWN,
+			     filename ) != LIBSPECTRUM_ERROR_NONE ) {
+    fprintf( stderr, "%s: error reading `%s'\n", progname, filename );
+    libspectrum_snap_free( snap );
+    libspectrum_free( buffer );
+    return TEST_INCOMPLETE;
+  }
+
+  libspectrum_free( buffer );
+
+  if( libspectrum_snap_out_ula( snap ) != 0xfa ) failed = 1;
+  if( libspectrum_snap_out_128_memoryport( snap ) != 0x6f ) failed = 1;
+  if( libspectrum_snap_out_plus3_memoryport( snap ) != 0x28 ) failed = 1;
+
+  libspectrum_snap_free( snap );
+
+  return failed ? TEST_FAIL : TEST_PASS;
+}

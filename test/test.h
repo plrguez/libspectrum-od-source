@@ -49,5 +49,6 @@ test_return_t test_43( void );
 
 /* SZX read tests */
 test_return_t test_44( void );
+test_return_t test_45( void );
 
 #endif
