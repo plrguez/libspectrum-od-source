@@ -336,3 +336,32 @@ test_37( void )
   return szx_block_test( "SCLD", LIBSPECTRUM_MACHINE_TC2048, scld_setter,
       test_37_expected, ARRAY_SIZE(test_37_expected) );
 }
+
+static void
+zxat_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_zxatasp_active( snap, 1 );
+
+  libspectrum_snap_set_zxatasp_upload( snap, 1 );
+  libspectrum_snap_set_zxatasp_writeprotect( snap, 0 );
+  libspectrum_snap_set_zxatasp_port_a( snap, 0xab );
+  libspectrum_snap_set_zxatasp_port_b( snap, 0x8c );
+  libspectrum_snap_set_zxatasp_port_c( snap, 0x82 );
+  libspectrum_snap_set_zxatasp_control( snap, 0xd8 );
+  libspectrum_snap_set_zxatasp_pages( snap, 0x18 );
+  libspectrum_snap_set_zxatasp_current_page( snap, 0x11 );
+}
+
+static libspectrum_byte
+test_38_expected[] = {
+  0x01, 0x00, /* Flags */
+  0xab, 0x8c, 0x82, 0xd8, /* Ports */
+  0x18, 0x11 /* Page count and current page */
+};
+
+test_return_t
+test_38( void )
+{
+  return szx_block_test( "ZXAT", LIBSPECTRUM_MACHINE_48, zxat_setter,
+      test_38_expected, ARRAY_SIZE(test_38_expected) );
+}
