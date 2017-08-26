@@ -425,3 +425,22 @@ test_41( void )
   return szx_block_test( "SIDE", LIBSPECTRUM_MACHINE_48, side_setter,
       test_41_expected, ARRAY_SIZE(test_41_expected) );
 }
+
+static void
+drum_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_specdrum_active( snap, 1 );
+  libspectrum_snap_set_specdrum_dac( snap, -0x3b );
+}
+
+static libspectrum_byte
+test_42_expected[] = {
+  0x45 /* DAC + 128 */
+};
+
+test_return_t
+test_42( void )
+{
+  return szx_block_test( "DRUM", LIBSPECTRUM_MACHINE_48, drum_setter,
+      test_42_expected, ARRAY_SIZE(test_42_expected) );
+}
