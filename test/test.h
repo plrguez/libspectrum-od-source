@@ -45,5 +45,6 @@ test_return_t test_39( void );
 test_return_t test_40( void );
 test_return_t test_41( void );
 test_return_t test_42( void );
+test_return_t test_43( void );
 
 #endif

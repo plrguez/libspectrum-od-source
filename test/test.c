@@ -809,7 +809,8 @@ static struct test_description tests[] = {
   { test_39, "Write SZX ZXCF chunk", 0 },
   { test_40, "Write SZX AMXM chunk", 0 },
   { test_41, "Write SZX SIDE chunk", 0 },
-  { test_42, "Write SZX DRUM chunk", 0 }
+  { test_42, "Write SZX DRUM chunk", 0 },
+  { test_43, "Write SZX COVX chunk", 0 }
 };
 
 static size_t test_count = ARRAY_SIZE( tests );

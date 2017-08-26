@@ -444,3 +444,23 @@ test_42( void )
   return szx_block_test( "DRUM", LIBSPECTRUM_MACHINE_48, drum_setter,
       test_42_expected, ARRAY_SIZE(test_42_expected) );
 }
+
+static void
+covx_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_covox_active( snap, 1 );
+  libspectrum_snap_set_covox_dac( snap, 0xc0 );
+}
+
+static libspectrum_byte
+test_43_expected[] = {
+  0xc0, /* DAC */
+  0x00, 0x00, 0x00 /* Reserved */
+};
+
+test_return_t
+test_43( void )
+{
+  return szx_block_test( "COVX", LIBSPECTRUM_MACHINE_48, covx_setter,
+      test_43_expected, ARRAY_SIZE(test_43_expected) );
+}
