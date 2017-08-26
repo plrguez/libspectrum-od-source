@@ -409,3 +409,19 @@ test_40( void )
   return szx_block_test( "AMXM", LIBSPECTRUM_MACHINE_48, amxm_setter,
       test_40_expected, ARRAY_SIZE(test_40_expected) );
 }
+
+static void
+side_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_simpleide_active( snap, 1 );
+}
+
+static libspectrum_byte
+test_41_expected[] = { /* Empty */ };
+
+test_return_t
+test_41( void )
+{
+  return szx_block_test( "SIDE", LIBSPECTRUM_MACHINE_48, side_setter,
+      test_41_expected, ARRAY_SIZE(test_41_expected) );
+}
