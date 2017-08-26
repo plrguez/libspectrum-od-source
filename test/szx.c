@@ -95,19 +95,10 @@ find_szx_chunk( libspectrum_buffer *buffer, const char *search )
   return NULL;
 }
 
-static libspectrum_byte
-test_31_expected[] = {
-  0x1f, 0xc4, 0x06, 0x03, 0xe4, 0x06, 0x54, 0x01, /* AF, BC, DE, HL */
-  0x07, 0x69, 0xdc, 0xe7, 0xd0, 0xc3, 0xcb, 0xdc, /* AF', BC', DE', HL' */
-  0xa3, 0x8b, 0x13, 0x1c, 0x6d, 0xf8, 0x1e, 0xc8, /* IX, IY, SP, PC */
-  0x19, 0x84, 0x01, 0x00, 0x02, /* I, R, IFF1, IFF2, IM */
-  0x28, 0x00, 0x00, 0x00, 0x08, /* tstates, tstates until /INT goes high */
-  0x05, /* flags */
-  0x03, 0xdc /* MEMPTR */
-};
-
-test_return_t
-test_31( void )
+static test_return_t
+szx_block_test( const char *id, libspectrum_machine machine,
+    void (*setter)( libspectrum_snap* ),
+    libspectrum_byte *expected, size_t expected_length )
 {
   libspectrum_snap *snap;
   libspectrum_buffer *buffer;
@@ -119,8 +110,42 @@ test_31( void )
 
   snap = libspectrum_snap_alloc();
 
-  libspectrum_snap_set_machine( snap, LIBSPECTRUM_MACHINE_48 );
-  
+  libspectrum_snap_set_machine( snap, machine );
+
+  setter( snap );
+
+  libspectrum_szx_write( buffer, &out_flags, snap, NULL, 0 );
+  libspectrum_snap_free( snap );
+
+  chunk = find_szx_chunk( buffer, id );
+  if( !chunk ) {
+    fprintf( stderr, "Chunk not found\n" );
+    return TEST_FAIL;
+  }
+
+  libspectrum_buffer_free( buffer );
+
+  if( chunk->length == expected_length ) {
+    if( memcmp( chunk->data, expected, expected_length ) ) {
+      fprintf( stderr, "Chunk has wrong data\n" );
+      r = TEST_FAIL;
+    } else {
+      r = TEST_PASS;
+    }
+  } else {
+    fprintf( stderr, "Chunk has wrong length\n" );
+    r = TEST_FAIL;
+  }
+
+  libspectrum_free( chunk->data );
+  libspectrum_free( chunk );
+
+  return r;
+}
+
+static void
+z80r_setter( libspectrum_snap *snap )
+{
   libspectrum_snap_set_a( snap, 0xc4 );
   libspectrum_snap_set_f( snap, 0x1f );
   libspectrum_snap_set_bc( snap, 0x0306 );
@@ -151,34 +176,32 @@ test_31( void )
   libspectrum_snap_set_last_instruction_set_f( snap, 1 );
 
   libspectrum_snap_set_memptr( snap, 0xdc03 );
+}
 
-  libspectrum_szx_write( buffer, &out_flags, snap, NULL, 0 );
-  libspectrum_snap_free( snap );
+static libspectrum_byte
+test_31_expected[] = {
+  0x1f, 0xc4, 0x06, 0x03, 0xe4, 0x06, 0x54, 0x01, /* AF, BC, DE, HL */
+  0x07, 0x69, 0xdc, 0xe7, 0xd0, 0xc3, 0xcb, 0xdc, /* AF', BC', DE', HL' */
+  0xa3, 0x8b, 0x13, 0x1c, 0x6d, 0xf8, 0x1e, 0xc8, /* IX, IY, SP, PC */
+  0x19, 0x84, 0x01, 0x00, 0x02, /* I, R, IFF1, IFF2, IM */
+  0x28, 0x00, 0x00, 0x00, 0x08, /* tstates, tstates until /INT goes high */
+  0x05, /* flags */
+  0x03, 0xdc /* MEMPTR */
+};
 
-  chunk = find_szx_chunk( buffer, "Z80R" );
-  if( !chunk ) {
-    fprintf( stderr, "Z80R chunk not found\n" );
-    return TEST_FAIL;
-  }
+test_return_t
+test_31( void )
+{
+  return szx_block_test( "Z80R", LIBSPECTRUM_MACHINE_48, z80r_setter,
+      test_31_expected, ARRAY_SIZE(test_31_expected) );
+}
 
-  libspectrum_buffer_free( buffer );
-
-  if( chunk->length == 37 ) {
-    if( memcmp( chunk->data, test_31_expected, 37 ) ) {
-      fprintf( stderr, "Chunk has wrong data\n" );
-      r = TEST_FAIL;
-    } else {
-      r = TEST_PASS;
-    }
-  } else {
-    fprintf( stderr, "Chunk has wrong length\n" );
-    r = TEST_FAIL;
-  }
-
-  libspectrum_free( chunk->data );
-  libspectrum_free( chunk );
-
-  return r;
+static void
+spcr_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_out_ula( snap, 0xfa );
+  libspectrum_snap_set_out_128_memoryport( snap, 0x6f );
+  libspectrum_snap_set_out_plus3_memoryport( snap, 0x28 );
 }
 
 static libspectrum_byte
@@ -190,47 +213,6 @@ test_32_expected[] = {
 test_return_t
 test_32( void )
 {
-  libspectrum_snap *snap;
-  libspectrum_buffer *buffer;
-  int out_flags;
-  szx_chunk_t *chunk;
-  test_return_t r = TEST_INCOMPLETE;
-
-  buffer = libspectrum_buffer_alloc();
-
-  snap = libspectrum_snap_alloc();
-
-  libspectrum_snap_set_machine( snap, LIBSPECTRUM_MACHINE_PLUS3 );
-
-  libspectrum_snap_set_out_ula( snap, 0xfa );
-  libspectrum_snap_set_out_128_memoryport( snap, 0x6f );
-  libspectrum_snap_set_out_plus3_memoryport( snap, 0x28 );
-
-  libspectrum_szx_write( buffer, &out_flags, snap, NULL, 0 );
-  libspectrum_snap_free( snap );
-
-  chunk = find_szx_chunk( buffer, "SPCR" );
-  if( !chunk ) {
-    fprintf( stderr, "SPCR chunk not found\n" );
-    return TEST_FAIL;
-  }
-
-  libspectrum_buffer_free( buffer );
-
-  if( chunk->length == 8 ) {
-    if( memcmp( chunk->data, test_32_expected, 8 ) ) {
-      fprintf( stderr, "Chunk has wrong data\n" );
-      r = TEST_FAIL;
-    } else {
-      r = TEST_PASS;
-    }
-  } else {
-    fprintf( stderr, "Chunk has wrong length\n" );
-    r = TEST_FAIL;
-  }
-
-  libspectrum_free( chunk->data );
-  libspectrum_free( chunk );
-
-  return r;
+  return szx_block_test( "SPCR", LIBSPECTRUM_MACHINE_PLUS3, spcr_setter,
+      test_32_expected, ARRAY_SIZE(test_32_expected) );
 }
