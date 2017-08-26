@@ -264,3 +264,21 @@ test_34( void )
   return szx_block_test( "KEYB", LIBSPECTRUM_MACHINE_48, keyb_setter,
       test_34_expected, ARRAY_SIZE(test_34_expected) );
 }
+
+static void
+zxpr_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_zx_printer_active( snap, 1 );
+}
+
+static libspectrum_byte
+test_35_expected[] = {
+  0x01, 0x00 /* Flags */
+};
+
+test_return_t
+test_35( void )
+{
+  return szx_block_test( "ZXPR", LIBSPECTRUM_MACHINE_48, zxpr_setter,
+      test_35_expected, ARRAY_SIZE(test_35_expected) );
+}
