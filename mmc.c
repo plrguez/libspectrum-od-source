@@ -353,14 +353,14 @@ send_cid( libspectrum_mmc_card *card )
   card->response_buffer[ 0 ] = card->r1_status; /* R1 command response */
   card->response_buffer[ 1 ] = 0xfe;            /* data token */
 
-  /* For now, we return an empty CID. This seems to work. */
+  /* For now, we return a mostly empty CID. This seems to work. */
   memset( &card->response_buffer[ 2 ], 0x00, 16 );
 
   /* Set blank OID */
   memcpy( &card->response_buffer[ 2 + 1 ], "  ", 2 );
 
   /* Set product name */
-  memcpy( &card->response_buffer[ 2 + 3 ], "FUSE", 4 );
+  memcpy( &card->response_buffer[ 2 + 3 ], "Fuse", 4 );
 
   /* Bit 0, not used, always 1 */
   card->response_buffer[ 2 +  15 ] = 0x01;
