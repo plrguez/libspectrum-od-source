@@ -50,5 +50,16 @@ test_return_t test_43( void );
 /* SZX read tests */
 test_return_t test_44( void );
 test_return_t test_45( void );
+test_return_t test_46( void );
+test_return_t test_47( void );
+test_return_t test_48( void );
+test_return_t test_49( void );
+test_return_t test_50( void );
+test_return_t test_51( void );
+test_return_t test_52( void );
+test_return_t test_53( void );
+test_return_t test_54( void );
+test_return_t test_55( void );
+test_return_t test_56( void );
 
 #endif

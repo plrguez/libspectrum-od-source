@@ -562,3 +562,195 @@ test_45( void )
 {
   return szx_read_block_test( "SPCR", test_45_check );
 }
+
+static int
+test_46_check( libspectrum_snap *snap )
+{
+  int failed = 0;
+
+  if( libspectrum_snap_joystick_active_count( snap ) != 2 ) failed = 1;
+  if( libspectrum_snap_joystick_list( snap, 0 ) != LIBSPECTRUM_JOYSTICK_KEMPSTON ) failed = 1;
+  if( libspectrum_snap_joystick_inputs( snap, 0 ) != LIBSPECTRUM_JOYSTICK_INPUT_JOYSTICK_1 ) failed = 1;
+  if( libspectrum_snap_joystick_list( snap, 1 ) != LIBSPECTRUM_JOYSTICK_SINCLAIR_1 ) failed = 1;
+  if( libspectrum_snap_joystick_inputs( snap, 1 ) != LIBSPECTRUM_JOYSTICK_INPUT_JOYSTICK_2 ) failed = 1;
+
+  return failed;
+}
+
+test_return_t
+test_46( void )
+{
+  return szx_read_block_test( "JOY", test_46_check );
+}
+
+static int
+test_47_check( libspectrum_snap *snap )
+{
+  int failed = 0;
+
+  if( libspectrum_snap_issue2( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_joystick_active_count( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_joystick_list( snap, 0 ) != LIBSPECTRUM_JOYSTICK_CURSOR ) failed = 1;
+  if( libspectrum_snap_joystick_inputs( snap, 0 ) != LIBSPECTRUM_JOYSTICK_INPUT_KEYBOARD ) failed = 1;
+
+  return failed;
+}
+
+test_return_t
+test_47( void )
+{
+  return szx_read_block_test( "KEYB", test_47_check );
+}
+
+static int
+test_48_check( libspectrum_snap *snap )
+{
+  return libspectrum_snap_zx_printer_active( snap ) != 1;
+}
+
+test_return_t
+test_48( void )
+{
+  return szx_read_block_test( "ZXPR", test_48_check );
+}
+
+static int
+test_49_check( libspectrum_snap *snap )
+{
+  int failed = 0;
+  size_t i;
+
+  if( libspectrum_snap_fuller_box_active( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_melodik_active( snap ) != 0 ) failed = 1;
+  if( libspectrum_snap_out_ay_registerport( snap ) != 0x08 ) failed = 1;
+
+  for( i = 0; i < 16; i++ ) {
+    if( libspectrum_snap_ay_registers( snap, i ) != ay_registers_data[i] ) failed = 1;
+  }
+
+  return failed;
+}
+
+test_return_t
+test_49( void )
+{
+  return szx_read_block_test( "AY", test_49_check );
+}
+
+static int
+test_50_check( libspectrum_snap *snap )
+{
+  int failed = 0;
+
+  if( libspectrum_snap_out_scld_hsr( snap ) != 0x49 ) failed = 1;
+  if( libspectrum_snap_out_scld_dec( snap ) != 0x9d ) failed = 1;
+
+  return failed;
+}
+
+test_return_t
+test_50( void )
+{
+  return szx_read_block_test( "SCLD", test_50_check );
+}
+
+static int
+test_51_check( libspectrum_snap *snap )
+{
+  int failed = 0;
+
+  if( libspectrum_snap_zxatasp_active( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_zxatasp_upload( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_zxatasp_writeprotect( snap ) != 0 ) failed = 1;
+  if( libspectrum_snap_zxatasp_port_a( snap ) != 0xab ) failed = 1;
+  if( libspectrum_snap_zxatasp_port_b( snap ) != 0x8c ) failed = 1;
+  if( libspectrum_snap_zxatasp_port_c( snap ) != 0x82 ) failed = 1;
+  if( libspectrum_snap_zxatasp_control( snap ) != 0xd8 ) failed = 1;
+  if( libspectrum_snap_zxatasp_pages( snap ) != 0x18 ) failed = 1;
+  if( libspectrum_snap_zxatasp_current_page( snap ) != 0x11 ) failed = 1;
+
+  return failed;
+}
+
+test_return_t
+test_51( void )
+{
+  return szx_read_block_test( "ZXAT", test_51_check );
+}
+
+static int
+test_52_check( libspectrum_snap *snap )
+{
+  int failed = 0;
+
+  if( libspectrum_snap_zxcf_active( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_zxcf_upload( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_zxcf_memctl( snap ) != 0x37 ) failed = 1;
+  if( libspectrum_snap_zxcf_pages( snap ) != 0x55 ) failed = 1;
+
+  return failed;
+}
+
+test_return_t
+test_52( void )
+{
+  return szx_read_block_test( "ZXCF", test_52_check );
+}
+
+static int
+test_53_check( libspectrum_snap *snap )
+{
+  return libspectrum_snap_kempston_mouse_active( snap ) != 1;
+}
+
+test_return_t
+test_53( void )
+{
+  return szx_read_block_test( "AMXM", test_53_check );
+}
+
+static int
+test_54_check( libspectrum_snap *snap )
+{
+  return libspectrum_snap_simpleide_active( snap ) != 1;
+}
+
+test_return_t
+test_54( void )
+{
+  return szx_read_block_test( "SIDE", test_54_check );
+}
+
+static int
+test_55_check( libspectrum_snap *snap )
+{
+  int failed = 0;
+
+  if( libspectrum_snap_specdrum_active( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_specdrum_dac( snap ) != -0x3b ) failed = 1;
+
+  return failed;
+}
+
+test_return_t
+test_55( void )
+{
+  return szx_read_block_test( "DRUM", test_55_check );
+}
+
+static int
+test_56_check( libspectrum_snap *snap )
+{
+  int failed = 0;
+
+  if( libspectrum_snap_covox_active( snap ) != 1 ) failed = 1;
+  if( libspectrum_snap_covox_dac( snap ) != 0xc0 ) failed = 1;
+
+  return failed;
+}
+
+test_return_t
+test_56( void )
+{
+  return szx_read_block_test( "COVX", test_56_check );
+}
