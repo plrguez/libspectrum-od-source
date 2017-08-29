@@ -463,8 +463,12 @@ send_csd( libspectrum_mmc_card *card )
   /* CSD_STRUCTURE version 2.0 */
   card->response_buffer[ 2 ] = 0x40;
 
+  /* CCC card command classes (spread 8 bits, 4 bits across two bytes) */
+  card->response_buffer[ 2 +  4 ] = 0x5b;
+  card->response_buffer[ 2 +  5 ] = 0x05;
+
   /* READ_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors */
-  card->response_buffer[ 2 +  5 ] = 0x09;
+  card->response_buffer[ 2 +  5 ] |= 0x09;
 
   /* C_SIZE (spread 6 bits, 8 bits, 8 bits across three bytes),
      first 6 bits set to zero */
