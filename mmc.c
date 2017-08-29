@@ -29,7 +29,9 @@
 #include "internals.h"
 
 #define IN_IDLE_STATE_MASK   0x01
+#define ERASE_RESET_MASK     0x02
 #define ILLEGAL_COMMAND_MASK 0x04
+#define ERASE_SEQ_ERROR_MASK 0x10
 #define PARAMETER_ERROR_MASK 0x40
 
 /* The states while a command is being sent to the card */
@@ -54,6 +56,9 @@ enum command_byte {
   SEND_CID = 10,
   READ_SINGLE_BLOCK = 17,
   WRITE_BLOCK = 24,
+  ERASE_WR_BLK_START = 32,
+  ERASE_WR_BLK_END = 33,
+  ERASE = 38,
   APP_CMD = 55,
   READ_OCR = 58
 };
@@ -67,6 +72,13 @@ enum application_command_byte {
   SD_SEND_OP_COND = 41,
   SET_CLR_CARD_DETECT = 42,
   SEND_SCR = 51,
+};
+
+/* The state of an erase sequence */
+enum erase_sequence_t {
+  SEQ_ERASE_NONE,
+  SEQ_ERASE_WR_BLK_START,
+  SEQ_ERASE_WR_BLK_END,
 };
 
 typedef struct libspectrum_mmc_card {
@@ -114,6 +126,12 @@ typedef struct libspectrum_mmc_card {
 
   /* CMD55/APP_CMD issued so next command is application specific */
   int cmd55_issued;
+
+  /* Keep progress of ongoing erase sequence */
+  enum erase_sequence_t erase_sequence;
+
+  /* Initial and end blocks of programmed erase */
+  libspectrum_dword erase_block_start, erase_block_end;
 
 } libspectrum_mmc_card;
 
@@ -194,6 +212,9 @@ libspectrum_mmc_reset( libspectrum_mmc_card *card )
   card->response_buffer_end = card->response_buffer;
   card->cmd8_issued = 0;
   card->cmd55_issued = 0;
+  card->erase_sequence = SEQ_ERASE_NONE;
+  card->erase_block_start = 0;
+  card->erase_block_end = 0;
 }
 
 int
@@ -249,6 +270,131 @@ set_response_buffer_r7( libspectrum_mmc_card *card, libspectrum_dword value )
   card->response_buffer[ 4 ] = ( value & 0x000000ff );
   card->response_buffer_next = card->response_buffer;
   card->response_buffer_end = card->response_buffer + 5;
+}
+
+static void
+reset_erase_sequence( libspectrum_mmc_card *card )
+{
+  card->erase_sequence = SEQ_ERASE_NONE;
+  card->erase_block_start = 0;
+  card->erase_block_end = 0;
+}
+
+static void
+erase_wr_blk_start( libspectrum_mmc_card *card )
+{
+  /* Card initialised? */
+  if( card->r1_status & IN_IDLE_STATE_MASK ) {
+    card->r1_status |= ILLEGAL_COMMAND_MASK;
+    set_response_buffer_r1( card );
+    return;
+  }
+
+  /* Check erase sequence */
+  if( card->erase_sequence != SEQ_ERASE_NONE ) {
+    card->r1_status |= ERASE_SEQ_ERROR_MASK;
+    set_response_buffer_r1( card );
+    reset_erase_sequence( card );
+    return;
+  }
+
+  card->erase_block_start =
+    card->current_argument[ 3 ] +
+    (card->current_argument[ 2 ] << 8) +
+    (card->current_argument[ 1 ] << 16) +
+    (card->current_argument[ 0 ] << 24);
+
+  /* Sector out of range */
+  if( card->erase_block_start >= card->total_sectors ) {
+    card->r1_status |= PARAMETER_ERROR_MASK;
+    set_response_buffer_r1( card );
+    reset_erase_sequence( card );
+    return;
+  }
+
+  set_response_buffer_r1( card );
+  card->erase_sequence = SEQ_ERASE_WR_BLK_START;
+}
+
+static void
+erase_wr_blk_end( libspectrum_mmc_card *card )
+{
+  /* Card initialised? */
+  if( card->r1_status & IN_IDLE_STATE_MASK ) {
+    card->r1_status |= ILLEGAL_COMMAND_MASK;
+    set_response_buffer_r1( card );
+    return;
+  }
+
+  /* Check erase sequence */
+  if( card->erase_sequence != SEQ_ERASE_WR_BLK_START ) {
+    card->r1_status |= ERASE_SEQ_ERROR_MASK;
+    set_response_buffer_r1( card );
+    reset_erase_sequence( card );
+    return;
+  }
+
+  card->erase_block_end =
+    card->current_argument[ 3 ] +
+    (card->current_argument[ 2 ] << 8) +
+    (card->current_argument[ 1 ] << 16) +
+    (card->current_argument[ 0 ] << 24);
+
+  /* Sector out of range */
+  if( card->erase_block_end >= card->total_sectors ) {
+    card->r1_status |= PARAMETER_ERROR_MASK;
+    set_response_buffer_r1( card );
+    reset_erase_sequence( card );
+    return;
+  }
+
+  /* Check continuous range */
+  if( card->erase_block_start > card->erase_block_end ) {
+    card->r1_status |= PARAMETER_ERROR_MASK;
+    set_response_buffer_r1( card );
+    reset_erase_sequence( card );
+    return;
+  }
+
+  set_response_buffer_r1( card );
+  card->erase_sequence = SEQ_ERASE_WR_BLK_END;
+}
+
+static void
+erase( libspectrum_mmc_card *card )
+{
+  libspectrum_dword i;
+
+  /* Card initialised? */
+  if( card->r1_status & IN_IDLE_STATE_MASK ) {
+    card->r1_status |= ILLEGAL_COMMAND_MASK;
+    set_response_buffer_r1( card );
+    return;
+  }
+
+  /* Check erase sequence */
+  if( card->erase_sequence != SEQ_ERASE_WR_BLK_END ) {
+    card->r1_status |= ERASE_SEQ_ERROR_MASK;
+    set_response_buffer_r1( card );
+    reset_erase_sequence( card );
+    return;
+  }
+
+  /* The data at the card after an erase operation is either '0' or '1',
+     depends on the card vendor */
+  memset( card->send_buffer, 0x00, 512 );
+
+  for( i = card->erase_block_start; i <= card->erase_block_end; i++ ) {
+    libspectrum_ide_write_sector_to_hdf( &card->drive, card->cache, i,
+                                         card->send_buffer );
+  }
+
+  card->response_buffer[ 0 ] = card->r1_status; /* R1 command response */
+  card->response_buffer[ 1 ] = 0x01;            /* busy flag */
+  card->response_buffer_next = card->response_buffer;
+  card->response_buffer_end = card->response_buffer + 2;
+
+  reset_erase_sequence( card );
 }
 
 static void
@@ -324,6 +470,13 @@ send_csd( libspectrum_mmc_card *card )
      first 6 bits set to zero */
   card->response_buffer[ 2 +  8 ] = ( card->c_size >> 8 ) & 0xff;
   card->response_buffer[ 2 +  9 ] = card->c_size & 0xff;
+
+  /* ERASE_BLK_EN (1 bit ) */
+  card->response_buffer[ 2 +  10 ] = 0x40;
+
+  /* SECTOR_SIZE (spread 7 bits, 1 bit across two bytes) */
+  card->response_buffer[ 2 +  10 ] |= 0x3f;
+  card->response_buffer[ 2 +  11 ]  = 0x80;
 
   /* WRITE_BL_LEN = 9 => 2 ^ 9 = 512 byte sectors
      (spread 2 bits, 2 bits across two bytes) */
@@ -417,7 +570,7 @@ do_standard_command( libspectrum_mmc_card *card )
 {
   switch( card->current_command ) {
     case GO_IDLE_STATE:
-      card->r1_status = IN_IDLE_STATE_MASK;
+      card->r1_status |= IN_IDLE_STATE_MASK;
       card->cmd8_issued = 0;
       set_response_buffer_r1( card );
       break;
@@ -438,6 +591,15 @@ do_standard_command( libspectrum_mmc_card *card )
       break;
     case WRITE_BLOCK:
       set_response_buffer_r1( card );
+      break;
+    case ERASE_WR_BLK_START:
+      erase_wr_blk_start( card );
+      break;
+    case ERASE_WR_BLK_END:
+      erase_wr_blk_end( card );
+      break;
+    case ERASE:
+      erase( card );
       break;
     case APP_CMD:
       card->cmd55_issued = 1;
@@ -472,6 +634,22 @@ do_command( libspectrum_mmc_card *card )
        SD Memory Card command */
     if( do_application_command( card ) )
       return;
+  }
+
+  /* Check ongoing erase sequence */
+  if( card->erase_sequence != SEQ_ERASE_NONE ) {
+    switch( card->current_command ) {
+      case ERASE_WR_BLK_START:
+      case ERASE_WR_BLK_END:
+      case ERASE:
+        break;
+      default:
+        /* Clear erase sequence before executing because an out of erase
+           sequence command was received */
+        reset_erase_sequence( card );
+        card->r1_status |= ERASE_RESET_MASK;
+        break;
+    }
   }
 
   do_standard_command( card );
