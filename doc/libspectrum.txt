@@ -1891,6 +1891,64 @@ libspectrum_ide_write( libspectrum_ide_channel *chn,
 
 Write `data' to register `reg' of the IDE channel `chn'.
 
+MMC / SD card images
+====================
+
+Libspectrum contains various routines for handling MMC / SD card images. Due
+to the (potential) large size of these files, hard disk images are not handled
+entirely in memory as are the other file types, but require a real file.
+
+Libspectrum re-uses the existing HDF file format for MMC / SD card images, and
+emulates all cards as an SDHC card in SPI mode.
+
+libspectrum_mmc_card*
+libspectrum_mmc_alloc( void )
+
+Allocate a new MMC card image.
+
+void
+libspectrum_mmc_free( libspectrum_mmc_card *card )
+
+Deallocate the MMC card image in `card'.
+
+libspectrum_error
+libspectrum_mmc_insert( libspectrum_mmc_card *card, const char *filename );
+
+Cause the MMC / SD card image in `filename' to be attached to `card'.
+
+void
+libspectrum_mmc_commit( libspectrum_mmc_card *card )
+
+Cause any changes made to the image attached to `card' to be written back to
+the image.
+
+void
+libspectrum_mmc_eject( libspectrum_mmc_card *card )
+
+Cause the image attached to `card' to be detached. Note that any changes made
+to the image will be lost unless `libspectrum_mmc_commit' is called first.
+
+void
+libspectrum_mmc_reset( libspectrum_mmc_card *card )
+
+Reset the card `card'.
+
+int
+libspectrum_mmc_dirty( libspectrum_mmc_card *card )
+
+Returns non-zero if any changes have been made to `card' since
+`libspectrum_mmc_commit' was last called (or when the image was first loaded).
+
+libspectrum_byte
+libspectrum_mmc_read( libspectrum_mmc_card *card )
+
+Read the next byte from the SPI bus for `card'.
+
+void
+libspectrum_mmc_write( libspectrum_mmc_card *card, libspectrum_byte data )
+
+Write the byte `data` to the SPI bus for `card'.
+
 Thread Safety
 =============
 
