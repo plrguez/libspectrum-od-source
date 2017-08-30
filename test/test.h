@@ -32,4 +32,34 @@ test_return_t test_15( void );
 test_return_t test_28( void );
 test_return_t test_29( void );
 
+/* SZX write tests */
+test_return_t test_31( void );
+test_return_t test_32( void );
+test_return_t test_33( void );
+test_return_t test_34( void );
+test_return_t test_35( void );
+test_return_t test_36( void );
+test_return_t test_37( void );
+test_return_t test_38( void );
+test_return_t test_39( void );
+test_return_t test_40( void );
+test_return_t test_41( void );
+test_return_t test_42( void );
+test_return_t test_43( void );
+
+/* SZX read tests */
+test_return_t test_44( void );
+test_return_t test_45( void );
+test_return_t test_46( void );
+test_return_t test_47( void );
+test_return_t test_48( void );
+test_return_t test_49( void );
+test_return_t test_50( void );
+test_return_t test_51( void );
+test_return_t test_52( void );
+test_return_t test_53( void );
+test_return_t test_54( void );
+test_return_t test_55( void );
+test_return_t test_56( void );
+
 #endif
