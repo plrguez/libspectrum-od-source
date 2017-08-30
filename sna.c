@@ -354,6 +354,8 @@ libspectrum_sna_write( libspectrum_buffer *buffer, int *out_flags,
   /* We don't save the MMC state at all */
   if( libspectrum_snap_divmmc_active( snap ) )
     *out_flags |= LIBSPECTRUM_FLAG_SNAPSHOT_MAJOR_INFO_LOSS;
+  if( libspectrum_snap_zxmmc_active( snap ) )
+    *out_flags |= LIBSPECTRUM_FLAG_SNAPSHOT_MAJOR_INFO_LOSS;
 
   buffer_mem = libspectrum_buffer_alloc();
 

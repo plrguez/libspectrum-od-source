@@ -235,6 +235,8 @@ static const libspectrum_byte ZXSTSNER_RAM_COMPRESSED = 1;
 #define ZXSTBID_PALETTE "PLTT"
 static const libspectrum_byte ZXSTPALETTE_ENABLED = 1;
 
+#define ZXSTBID_ZXMMC "ZMMC"
+
 static libspectrum_error
 read_chunk( libspectrum_snap *snap, libspectrum_word version,
 	    const libspectrum_byte **buffer, const libspectrum_byte *end,
@@ -333,6 +335,9 @@ write_pltt_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
 static libspectrum_error
 write_mfce_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
 		  libspectrum_snap *snap, int compress );
+static void
+write_zmmc_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
+		  libspectrum_snap *snap );
 
 #ifdef HAVE_ZLIB_H
 
@@ -2421,6 +2426,24 @@ read_mfce_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 }
 
 static libspectrum_error
+read_zmmc_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
+                 const libspectrum_byte **buffer,
+                 const libspectrum_byte *end GCC_UNUSED, size_t data_length,
+                 szx_context *ctx GCC_UNUSED )
+{
+  if( data_length ) {
+    libspectrum_print_error( LIBSPECTRUM_ERROR_UNKNOWN,
+                             "%s:read_zmmc_chunk: unknown length %lu",
+                             __FILE__, (unsigned long)data_length );
+    return LIBSPECTRUM_ERROR_UNKNOWN;
+  }
+
+  libspectrum_snap_set_zxmmc_active( snap, 1 );
+
+  return LIBSPECTRUM_ERROR_NONE;
+}
+
+static libspectrum_error
 skip_chunk( libspectrum_snap *snap GCC_UNUSED,
 	    libspectrum_word version GCC_UNUSED,
 	    const libspectrum_byte **buffer,
@@ -2484,6 +2507,7 @@ static struct read_chunk_t read_chunks[] = {
   { ZXSTBID_ZXATASP,	         read_zxat_chunk },
   { ZXSTBID_ZXCF,	         read_zxcf_chunk },
   { ZXSTBID_ZXCFRAMPAGE,         read_cfrp_chunk },
+  { ZXSTBID_ZXMMC,	         read_zmmc_chunk },
   { ZXSTBID_ZXPRINTER,	         read_zxpr_chunk },
   { ZXSTBID_ZXTAPE,	         skip_chunk      },
 
@@ -2886,6 +2910,10 @@ libspectrum_szx_write( libspectrum_buffer *buffer, int *out_flags,
   if( libspectrum_snap_ulaplus_active( snap ) ) {
     error = write_pltt_chunk( buffer, block_data, snap, compress );
     if( error ) return error;
+  }
+
+  if( libspectrum_snap_zxmmc_active( snap ) ) {
+    write_zmmc_chunk( buffer, block_data, snap );
   }
 
   libspectrum_buffer_free( block_data );
@@ -4117,6 +4145,13 @@ write_pltt_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
   write_chunk( buffer, ZXSTBID_PALETTE, data );
 
   return LIBSPECTRUM_ERROR_NONE;
+}
+
+static void
+write_zmmc_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
+                  libspectrum_snap *snap )
+{
+  write_chunk( buffer, ZXSTBID_ZXMMC, NULL );
 }
 
 static void

@@ -308,6 +308,9 @@ struct libspectrum_snap {
   int multiface_red_button_disabled;
   libspectrum_byte* multiface_ram[1];
   size_t multiface_ram_length[1];
+
+  /* ZXMMC status */
+  int zxmmc_active;
 };
 
 /* Initialise a libspectrum_snap structure */

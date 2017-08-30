@@ -286,6 +286,8 @@ libspectrum_snap_alloc( void )
   libspectrum_snap_set_multiface_ram( snap, 0, NULL );
   libspectrum_snap_set_multiface_ram_length( snap, 0, 0 );
 
+  libspectrum_snap_set_zxmmc_active( snap, 0 );
+
   return snap;
 }
 
