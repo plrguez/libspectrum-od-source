@@ -571,6 +571,7 @@ libspectrum_identify_file_raw( libspectrum_id_t *type, const char *filename,
       { LIBSPECTRUM_ID_AUX_POK,       "pok", 3, NULL,		    0, 0, 0 },
 
       { LIBSPECTRUM_ID_SCREEN_SCR,    "scr", 3, NULL,		    0, 0, 0 },
+      { LIBSPECTRUM_ID_SCREEN_MLT,    "mlt", 3, NULL,		    0, 0, 0 },
 
       { -1, NULL, 0, NULL, 0, 0, 0 }, /* End marker */
 
@@ -747,6 +748,7 @@ libspectrum_identify_class( libspectrum_class_t *libspectrum_class,
   case LIBSPECTRUM_ID_AUX_POK:
     *libspectrum_class = LIBSPECTRUM_CLASS_AUXILIARY; return 0;
 
+  case LIBSPECTRUM_ID_SCREEN_MLT:
   case LIBSPECTRUM_ID_SCREEN_SCR:
     *libspectrum_class = LIBSPECTRUM_CLASS_SCREENSHOT; return 0;
 
