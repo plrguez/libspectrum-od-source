@@ -1216,7 +1216,7 @@ size_t count				PURE_TONE
 libspectrum_byte* data			CUSTOM
 					PURE_DATA
 					RAW_DATA
-					ROW
+					ROM
 					TURBO
 					DATA_BLOCK
 
