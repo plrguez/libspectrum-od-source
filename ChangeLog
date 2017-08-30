@@ -6,6 +6,7 @@
 
         * Various minor bug fixes/improvements:
           * Fix typo in libspectrum.txt (Martin M. S. Pedersen).
+          * Additional unit tests for SZX reading/writing (Philip Kendall).
 
 2017-07-31  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
