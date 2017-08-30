@@ -3,7 +3,7 @@
         * libspectrum 1.4.0 released.
 
         * Add support for MMC / SD card emulation in SPI mode (Philip Kendall
-	  and Sergio Baldoví).
+          and Sergio Baldoví).
 
         * Add class recognition for MLT files (Fredrick Meunier).
 
