@@ -81,7 +81,7 @@ enum erase_sequence_t {
   SEQ_ERASE_WR_BLK_END,
 };
 
-typedef struct libspectrum_mmc_card {
+struct libspectrum_mmc_card {
   /* The actual "card" data */
   libspectrum_ide_drive drive;
 
@@ -133,7 +133,7 @@ typedef struct libspectrum_mmc_card {
   /* Initial and end blocks of programmed erase */
   libspectrum_dword erase_block_start, erase_block_end;
 
-} libspectrum_mmc_card;
+};
 
 libspectrum_mmc_card*
 libspectrum_mmc_alloc( void )
