@@ -349,6 +349,14 @@ libspectrum_snap_free( libspectrum_snap *snap )
   if( libspectrum_snap_didaktik80_ram( snap, 0 ) )
     libspectrum_free( libspectrum_snap_didaktik80_ram( snap, 0 ) );
 
+  libspectrum_free( libspectrum_snap_divide_eprom( snap, 0 ) );
+  for( i = 0; i < SNAPSHOT_DIVIDE_PAGES; i++ )
+    libspectrum_free( libspectrum_snap_divide_ram( snap, i ) );
+
+  libspectrum_free( libspectrum_snap_divmmc_eprom( snap, 0 ) );
+  for( i = 0; i < SNAPSHOT_DIVMMC_PAGES; i++ )
+    libspectrum_free( libspectrum_snap_divmmc_ram( snap, i ) );
+
   if( libspectrum_snap_ulaplus_palette( snap, 0 ) )
     libspectrum_free( libspectrum_snap_ulaplus_palette( snap, 0 ) );
 
