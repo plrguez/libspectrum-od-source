@@ -1326,6 +1326,7 @@ rzx_write_header( libspectrum_buffer *buffer, int sign )
   /* Flags */
 #ifdef HAVE_GCRYPT_H
   /* Minor version number: 12 if we're not signing, 13 if we are */
+  libspectrum_buffer_write_byte( buffer, sign ? 13 : 12 );	/* Minor version number */
   libspectrum_buffer_write_dword( buffer, sign ? 0x01 : 0x00 );
 #else				/* #ifdef HAVE_GCRYPT_H */
   libspectrum_buffer_write_byte( buffer, 12 );	/* Minor version number */
