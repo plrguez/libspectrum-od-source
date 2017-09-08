@@ -418,13 +418,13 @@ side_setter( libspectrum_snap *snap )
 }
 
 static libspectrum_byte
-test_41_expected[] = { /* Empty */ };
+empty_chunk_expected[] = { /* Empty */ };
 
 test_return_t
 test_41( void )
 {
   return szx_write_block_test( "SIDE", LIBSPECTRUM_MACHINE_48, side_setter,
-      test_41_expected, ARRAY_SIZE(test_41_expected) );
+      empty_chunk_expected, ARRAY_SIZE(empty_chunk_expected) );
 }
 
 static void
@@ -464,6 +464,19 @@ test_43( void )
 {
   return szx_write_block_test( "COVX", LIBSPECTRUM_MACHINE_48, covx_setter,
       test_43_expected, ARRAY_SIZE(test_43_expected) );
+}
+
+static void
+zmmc_setter( libspectrum_snap *snap )
+{
+  libspectrum_snap_set_zxmmc_active( snap, 1 );
+}
+
+test_return_t
+test_57( void )
+{
+  return szx_write_block_test( "ZMMC", LIBSPECTRUM_MACHINE_48, zmmc_setter,
+      empty_chunk_expected, ARRAY_SIZE(empty_chunk_expected) );
 }
 
 static test_return_t
@@ -754,4 +767,16 @@ test_return_t
 test_56( void )
 {
   return szx_read_block_test( "COVX", test_56_check );
+}
+
+static int
+test_58_check( libspectrum_snap *snap )
+{
+  return libspectrum_snap_zxmmc_active( snap ) != 1;
+}
+
+test_return_t
+test_58( void )
+{
+  return szx_read_block_test( "ZMMC", test_58_check );
 }
