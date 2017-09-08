@@ -479,6 +479,32 @@ test_57( void )
       empty_chunk_expected, ARRAY_SIZE(empty_chunk_expected) );
 }
 
+static void
+ramp_setter( libspectrum_snap *snap )
+{
+  libspectrum_byte *ram = libspectrum_malloc0_n( 1, 0x4000 );
+  libspectrum_snap_set_pages( snap, 5, ram );
+}
+
+static libspectrum_byte
+test_59_expected[] = {
+  0x01, 0x00, /* Flags */
+  0x05, /* Page number */
+  /* 16 Kb of zeros compressed */
+  0x78, 0xda, 0xed, 0xc1, 0x31, 0x01, 0x00, 0x00,
+  0x00, 0xc2, 0xa0, 0xf5, 0x4f, 0x6d, 0x0c, 0x1f,
+  0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x80, 0xb7, 0x01, 0x40, 0x00, 0x00, 0x01
+};
+
+test_return_t
+test_59( void )
+{
+  return szx_write_block_test( "RAMP", LIBSPECTRUM_MACHINE_48, ramp_setter,
+      test_59_expected, ARRAY_SIZE(test_59_expected) );
+}
+
 static test_return_t
 szx_read_block_test( const char *id, int (*check_fn)( libspectrum_snap* ) )
 {
@@ -779,4 +805,31 @@ test_return_t
 test_58( void )
 {
   return szx_read_block_test( "ZMMC", test_58_check );
+}
+
+static int
+test_60_check( libspectrum_snap *snap )
+{
+  int failed = 0;
+  size_t i;
+
+  libspectrum_byte *page = libspectrum_snap_pages( snap, 5 );
+  if( page ) {
+    for( i = 0; i < 0x4000; i++ ) {
+      if( page[i] ) {
+        failed = 1;
+        break;
+      }
+    }
+  } else {
+    failed = 1;
+  }
+
+  return failed;
+}
+
+test_return_t
+test_60( void )
+{
+  return szx_read_block_test( "RAMP", test_60_check );
 }
