@@ -833,7 +833,13 @@ static struct test_description tests[] = {
   { test_61, "Write SZX ATRP chunk", 0 },
   { test_62, "Write SZX CFRP chunk", 0 },
   { test_63, "Read SZX ATRP chunk", 0 },
-  { test_64, "Read SZX CFRP chunk", 0 }
+  { test_64, "Read SZX CFRP chunk", 0 },
+  { test_65, "Write uncompressed SZX RAMP chunk", 0 },
+  { test_66, "Write uncompressed SZX ATRP chunk", 0 },
+  { test_67, "Write uncompressed SZX CFRP chunk", 0 },
+  { test_68, "Read uncompressed SZX RAMP chunk", 0 },
+  { test_69, "Read uncompressed SZX ATRP chunk", 0 },
+  { test_70, "Read uncompressed SZX CFRP chunk", 0 }
 };
 
 static size_t test_count = ARRAY_SIZE( tests );
