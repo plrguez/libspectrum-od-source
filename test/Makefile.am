@@ -63,15 +63,19 @@ EXTRA_DIST += \
 	test/sp-ffff.sna.gz \
 	test/standard-tap.tap \
 	test/szx-chunks/AMXM.szx \
+	test/szx-chunks/ATRP.szx \
 	test/szx-chunks/AY.szx \
+	test/szx-chunks/CFRP.szx \
 	test/szx-chunks/COVX.szx \
 	test/szx-chunks/DRUM.szx \
 	test/szx-chunks/JOY.szx \
 	test/szx-chunks/KEYB.szx \
+	test/szx-chunks/RAMP.szx \
 	test/szx-chunks/SCLD.szx \
 	test/szx-chunks/SIDE.szx \
 	test/szx-chunks/SPCR.szx \
 	test/szx-chunks/Z80R.szx \
+	test/szx-chunks/ZMMC.szx \
 	test/szx-chunks/ZXAT.szx \
 	test/szx-chunks/ZXCF.szx \
 	test/szx-chunks/ZXPR.szx \

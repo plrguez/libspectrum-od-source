@@ -483,13 +483,13 @@ static void
 ramp_setter( libspectrum_snap *snap )
 {
   libspectrum_byte *ram = libspectrum_malloc0_n( 1, 0x4000 );
-  libspectrum_snap_set_pages( snap, 5, ram );
+  libspectrum_snap_set_pages( snap, 0, ram );
 }
 
 static libspectrum_byte
-test_59_expected[] = {
+empty_ram_page_expected[] = {
   0x01, 0x00, /* Flags */
-  0x05, /* Page number */
+  0x00, /* Page number */
   /* 16 Kb of zeros compressed */
   0x78, 0xda, 0xed, 0xc1, 0x31, 0x01, 0x00, 0x00,
   0x00, 0xc2, 0xa0, 0xf5, 0x4f, 0x6d, 0x0c, 0x1f,
@@ -502,7 +502,45 @@ test_return_t
 test_59( void )
 {
   return szx_write_block_test( "RAMP", LIBSPECTRUM_MACHINE_48, ramp_setter,
-      test_59_expected, ARRAY_SIZE(test_59_expected) );
+      empty_ram_page_expected, ARRAY_SIZE(empty_ram_page_expected) );
+}
+
+static void
+atrp_setter( libspectrum_snap *snap )
+{
+  libspectrum_byte *ram;
+
+  libspectrum_snap_set_zxatasp_active( snap, 1 );
+  libspectrum_snap_set_zxatasp_pages( snap, 1 );
+
+  ram = libspectrum_malloc0_n( 1, 0x4000 );
+  libspectrum_snap_set_zxatasp_ram( snap, 0, ram );
+}
+
+test_return_t
+test_61( void )
+{
+  return szx_write_block_test( "ATRP", LIBSPECTRUM_MACHINE_48, atrp_setter,
+      empty_ram_page_expected, ARRAY_SIZE(empty_ram_page_expected) );
+}
+
+static void
+cfrp_setter( libspectrum_snap *snap )
+{
+  libspectrum_byte *ram;
+
+  libspectrum_snap_set_zxcf_active( snap, 1 );
+  libspectrum_snap_set_zxcf_pages( snap, 1 );
+
+  ram = libspectrum_malloc0_n( 1, 0x4000 );
+  libspectrum_snap_set_zxcf_ram( snap, 0, ram );
+}
+
+test_return_t
+test_62( void )
+{
+  return szx_write_block_test( "CFRP", LIBSPECTRUM_MACHINE_48, cfrp_setter,
+      empty_ram_page_expected, ARRAY_SIZE(empty_ram_page_expected) );
 }
 
 static test_return_t
@@ -808,12 +846,13 @@ test_58( void )
 }
 
 static int
-test_60_check( libspectrum_snap *snap )
+empty_ram_page_check( libspectrum_snap *snap,
+    libspectrum_byte* (*get_ram_page)( libspectrum_snap*, int ) )
 {
   int failed = 0;
   size_t i;
 
-  libspectrum_byte *page = libspectrum_snap_pages( snap, 5 );
+  libspectrum_byte *page = get_ram_page( snap, 0 );
   if( page ) {
     for( i = 0; i < 0x4000; i++ ) {
       if( page[i] ) {
@@ -828,8 +867,38 @@ test_60_check( libspectrum_snap *snap )
   return failed;
 }
 
+static int
+test_60_check( libspectrum_snap *snap )
+{
+  return empty_ram_page_check( snap, libspectrum_snap_pages );
+}
+
 test_return_t
 test_60( void )
 {
   return szx_read_block_test( "RAMP", test_60_check );
+}
+
+static int
+test_63_check( libspectrum_snap *snap )
+{
+  return empty_ram_page_check( snap, libspectrum_snap_zxatasp_ram );
+}
+
+test_return_t
+test_63( void )
+{
+  return szx_read_block_test( "ATRP", test_63_check );
+}
+
+static int
+test_64_check( libspectrum_snap *snap )
+{
+  return empty_ram_page_check( snap, libspectrum_snap_zxcf_ram );
+}
+
+test_return_t
+test_64( void )
+{
+  return szx_read_block_test( "CFRP", test_64_check );
 }
