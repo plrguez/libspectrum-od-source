@@ -19,7 +19,7 @@
 ##
 ## E-mail: philip-fuse@shadowmagic.org.uk
 
-noinst_PROGRAMS += test/test
+check_PROGRAMS = test/test
 
 test_test_SOURCES = \
 	test/edges.c \
