@@ -1,3 +1,17 @@
+2017-10-??  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.4.1 released.
+
+        * Fix generation of malformed RZXs (thanks, Nicholas Naime) (ub880d)
+
+        * Various minor bug fixes/improvements:
+          * Build test program on "make check" rule (Sergio Baldoví).
+          * Additional unit tests for SZX reading/writing (Philip Kendall).
+          * Free DivIDE/DivMMC memory from snapshots (Sergio Baldoví).
+          * Remove C99 typedef redefinition of libspectrum_mmc_card (Fredrick
+            Meunier).
+          * Correct version for MLT class addition (Fredrick Meunier).
+
 2017-09-03  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
         * libspectrum 1.4.0 released.
