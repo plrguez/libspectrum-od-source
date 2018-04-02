@@ -761,6 +761,60 @@ test_30( void )
   return TEST_PASS;
 }
 
+static test_return_t
+test_71( void )
+{
+  const char *filename = STATIC_TEST_PATH( "random.szx" );
+  libspectrum_byte *buffer = NULL;
+  size_t filesize = 0;
+  size_t rzx_length = 0;
+  libspectrum_snap *snap;
+  libspectrum_rzx *rzx;
+  test_return_t r = TEST_INCOMPLETE;
+
+  if( read_file( &buffer, &filesize, filename ) ) return TEST_INCOMPLETE;
+
+  snap = libspectrum_snap_alloc();
+
+  if( libspectrum_snap_read( snap, buffer, filesize, LIBSPECTRUM_ID_UNKNOWN,
+			     filename ) != LIBSPECTRUM_ERROR_NONE ) {
+    fprintf( stderr, "%s: reading `%s' failed\n", progname, filename );
+    libspectrum_snap_free( snap );
+    libspectrum_free( buffer );
+    return TEST_INCOMPLETE;
+  }
+
+  libspectrum_free( buffer );
+
+  rzx = libspectrum_rzx_alloc();
+
+  if( libspectrum_rzx_add_snap( rzx, snap, 0 ) != LIBSPECTRUM_ERROR_NONE ) {
+    fprintf( stderr, "%s: adding snap failed\n", progname );
+    libspectrum_rzx_free( rzx );
+    libspectrum_snap_free( snap );
+    return TEST_INCOMPLETE;
+  }
+
+  if( libspectrum_rzx_write( &buffer, &rzx_length, rzx,
+        LIBSPECTRUM_ID_SNAPSHOT_SZX, NULL, 1, NULL ) != LIBSPECTRUM_ERROR_NONE ) {
+    fprintf( stderr, "%s: error serializing RZX\n", progname );
+    libspectrum_rzx_free( rzx );
+    return TEST_INCOMPLETE;
+  }
+
+  libspectrum_rzx_free( rzx );
+  libspectrum_free( buffer );
+
+  if( rzx_length > 49152 ) {
+    r = TEST_PASS;
+  } else {
+    fprintf( stderr, "%s: length %lu too short\n", progname, rzx_length );
+    r = TEST_FAIL;
+  }
+
+  return r;
+}
+
 struct test_description {
 
   test_fn test;
@@ -839,7 +893,8 @@ static struct test_description tests[] = {
   { test_67, "Write uncompressed SZX CFRP chunk", 0 },
   { test_68, "Read uncompressed SZX RAMP chunk", 0 },
   { test_69, "Read uncompressed SZX ATRP chunk", 0 },
-  { test_70, "Read uncompressed SZX CFRP chunk", 0 }
+  { test_70, "Read uncompressed SZX CFRP chunk", 0 },
+  { test_71, "Write RZX with incompressible snap", 0 }
 };
 
 static size_t test_count = ARRAY_SIZE( tests );
