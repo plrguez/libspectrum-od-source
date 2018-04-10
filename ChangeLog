@@ -4,7 +4,7 @@
 
         * RZX files containing a snapshot which cannot be compressed are
           now written correctly (fixes bug #418) (Philip Kendall, thanks
-          to a reporter on Facebook).
+          Chris Flynn).
 
 2017-10-10  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
