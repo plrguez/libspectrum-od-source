@@ -1395,8 +1395,9 @@ rzx_compress( libspectrum_buffer *dest, libspectrum_buffer *src, int *compress )
     /* We couldn't compress the data, so just copy the uncompressed data
        across instead */
     libspectrum_buffer_write_buffer( dest, src );
+    libspectrum_free( compressed_data );
 
-    return error;
+    return LIBSPECTRUM_ERROR_NONE;
   }
 
   libspectrum_buffer_write( dest, compressed_data, out_length );
