@@ -59,6 +59,7 @@ EXTRA_DIST += \
 	test/loopend.tzx \
 	test/no-pilot-gdb.tzx \
 	test/plus3.z80 \
+	test/random.szx \
 	test/sp-2000.sna.gz \
 	test/sp-ffff.sna.gz \
 	test/standard-tap.tap \
