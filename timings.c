@@ -76,14 +76,14 @@ static const timings_frame_t timings_frame_amstrad_asic =
 static const timings_frame_t timings_frame_timex_scld_50hz =
 {
   24, 128, 24, 48, /* Horizontal, 224 clocks per line */
-  48, 192, 24, 32, /* Vertical, 312 lines per frame */
+  48, 192, 48, 24, /* Vertical, 312 lines per frame */
   32, 14321
 };
 
 static const timings_frame_t timings_frame_timex_scld_60hz =
 {
   24, 128, 24, 48, /* Horizontal, 224 clocks per line */
-  24, 192, 25, 21, /* Vertical, 263 lines per frame */
+  24, 192, 25, 21, /* Vertical, 262 lines per frame */
   32, 9169
 };
 
