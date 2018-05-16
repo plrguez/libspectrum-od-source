@@ -1,5 +1,5 @@
 /* tape.c: Routines for handling tape files
-   Copyright (c) 2001-2014 Philip Kendall, Darren Salt, Fredrick Meunier
+   Copyright (c) 2001-2018 Philip Kendall, Darren Salt, Fredrick Meunier
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -1576,6 +1576,15 @@ libspectrum_tape_iterator_next( libspectrum_tape_iterator *iterator )
   if( iterator && *iterator ) {
     *iterator = (*iterator)->next;
     return libspectrum_tape_iterator_current( *iterator );
+  }
+  return NULL;
+}
+
+libspectrum_tape_block*
+libspectrum_tape_iterator_peek_next( libspectrum_tape_iterator iterator )
+{
+  if( iterator ) {
+    return libspectrum_tape_iterator_current( iterator->next );
   }
   return NULL;
 }

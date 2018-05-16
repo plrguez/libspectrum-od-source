@@ -815,6 +815,85 @@ test_71( void )
   return r;
 }
 
+static test_return_t
+test_72( void )
+{
+  const char *filename = DYNAMIC_TEST_PATH( "complete-tzx.tzx" );
+  libspectrum_byte *buffer = NULL;
+  size_t filesize = 0;
+  libspectrum_tape *tape;
+  libspectrum_tape_iterator it;
+  libspectrum_tape_block *block;
+  libspectrum_tape_type expected_next_block_types[19] = {
+    LIBSPECTRUM_TAPE_BLOCK_TURBO,       /* ROM */
+    LIBSPECTRUM_TAPE_BLOCK_PURE_TONE,   /* Turbo */
+    LIBSPECTRUM_TAPE_BLOCK_PULSES,      /* Pure tone */
+    LIBSPECTRUM_TAPE_BLOCK_PURE_DATA,   /* Pulses */
+    LIBSPECTRUM_TAPE_BLOCK_PAUSE,       /* Pure data */
+    LIBSPECTRUM_TAPE_BLOCK_GROUP_START, /* Pause */
+    LIBSPECTRUM_TAPE_BLOCK_GROUP_END,   /* Group start */
+    LIBSPECTRUM_TAPE_BLOCK_JUMP,        /* Group end */
+    LIBSPECTRUM_TAPE_BLOCK_PURE_TONE,   /* Jump */
+    LIBSPECTRUM_TAPE_BLOCK_LOOP_START,  /* Pure tone */
+    LIBSPECTRUM_TAPE_BLOCK_PURE_TONE,   /* Loop start */
+    LIBSPECTRUM_TAPE_BLOCK_LOOP_END,    /* Pure tone */
+    LIBSPECTRUM_TAPE_BLOCK_STOP48,      /* Loop end */
+    LIBSPECTRUM_TAPE_BLOCK_COMMENT,     /* Stop tape if in 48K mode */
+    LIBSPECTRUM_TAPE_BLOCK_MESSAGE,     /* Comment */
+    LIBSPECTRUM_TAPE_BLOCK_ARCHIVE_INFO,/* Message */
+    LIBSPECTRUM_TAPE_BLOCK_HARDWARE,    /* Archive info */
+    LIBSPECTRUM_TAPE_BLOCK_CUSTOM,      /* Hardware */
+    LIBSPECTRUM_TAPE_BLOCK_PURE_TONE,   /* Custom info */
+  };
+  libspectrum_tape_type *next_block_type = &expected_next_block_types[ 0 ];
+  test_return_t r = TEST_PASS;
+  int blocks_processed = 0;
+  /* Expect to check the next block type of 19 of the 20 blocks in the test
+     tzx */
+  int expected_block_count = ARRAY_SIZE( expected_next_block_types );
+
+  if( read_file( &buffer, &filesize, filename ) ) return TEST_INCOMPLETE;
+
+  tape = libspectrum_tape_alloc();
+
+  if( libspectrum_tape_read( tape, buffer, filesize, LIBSPECTRUM_ID_UNKNOWN,
+			     filename ) )
+  {
+    libspectrum_tape_free( tape );
+    libspectrum_free( buffer );
+    return TEST_INCOMPLETE;
+  }
+
+  libspectrum_free( buffer );
+
+  block = libspectrum_tape_iterator_init( &it, tape );
+
+  while( libspectrum_tape_iterator_peek_next( it ) )
+  {
+    libspectrum_tape_type actual_next_block_type =
+      libspectrum_tape_block_type( libspectrum_tape_iterator_peek_next( it ) );
+
+    if( actual_next_block_type != *next_block_type )
+    {
+      r = TEST_FAIL;
+      break;
+    }
+
+    block = libspectrum_tape_iterator_next( &it );
+    next_block_type++;
+    blocks_processed++;
+  }
+
+  if( blocks_processed != expected_block_count )
+  {
+      r = TEST_FAIL;
+  }
+
+  if( libspectrum_tape_free( tape ) ) return TEST_INCOMPLETE;
+
+  return r;
+}
+
 struct test_description {
 
   test_fn test;
@@ -894,7 +973,8 @@ static struct test_description tests[] = {
   { test_68, "Read uncompressed SZX RAMP chunk", 0 },
   { test_69, "Read uncompressed SZX ATRP chunk", 0 },
   { test_70, "Read uncompressed SZX CFRP chunk", 0 },
-  { test_71, "Write RZX with incompressible snap", 0 }
+  { test_71, "Write RZX with incompressible snap", 0 },
+  { test_72, "Tape peek next block", 0 }
 };
 
 static size_t test_count = ARRAY_SIZE( tests );
