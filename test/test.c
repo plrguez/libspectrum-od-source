@@ -214,7 +214,7 @@ test_2( void )
   }
 
   if( tstates != 667 ) {
-    fprintf( stderr, "%s: first edge of `%s' was %d tstates; expected 667\n",
+    fprintf( stderr, "%s: first edge of `%s' was %u tstates; expected 667\n",
 	     progname, filename, tstates );
     libspectrum_tape_free( tape );
     return TEST_FAIL;
@@ -808,7 +808,8 @@ test_71( void )
   if( rzx_length > 49152 ) {
     r = TEST_PASS;
   } else {
-    fprintf( stderr, "%s: length %lu too short\n", progname, rzx_length );
+    fprintf( stderr, "%s: length %lu too short\n", progname,
+             (unsigned long)rzx_length );
     r = TEST_FAIL;
   }
 
