@@ -53,7 +53,7 @@ find_szx_chunk( libspectrum_buffer *buffer, const char *search )
   data = libspectrum_buffer_get_data( buffer );
   data_remaining = libspectrum_buffer_get_data_size( buffer );
 
-  if( data_remaining < 0 ) {
+  if( data_remaining < 8 ) {
     fprintf( stderr, "SZX file is less than 8 bytes long\n" );
     return NULL;
   }
