@@ -574,7 +574,7 @@ read_b128_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 				 "%s:read_b128_chunk: length %lu too short, "
 				 "expected %lu",
 				 __FILE__, (unsigned long)data_length,
-				 (unsigned long)10 + expected_length );
+				 (unsigned long)( 10UL + expected_length ) );
 	return LIBSPECTRUM_ERROR_UNKNOWN;
       }
 
@@ -740,8 +740,8 @@ read_opus_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 			       "%s:read_opus_chunk: length %lu too short, "
 			       "expected %lu" ,
 			       __FILE__, (unsigned long)data_length,
-			       (unsigned long)23 + disc_ram_length +
-                                 disc_rom_length );
+			       (unsigned long)( 23UL + disc_ram_length +
+			                               disc_rom_length ) );
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
@@ -821,7 +821,7 @@ read_opus_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
                                "has %lu",
 			       __FILE__, 
                                libspectrum_snap_opus_custom_rom( snap ) ?
-                                 expected_length : 0UL,
+                                 (unsigned long)expected_length : 0UL,
                                (unsigned long)disc_rom_length );
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
@@ -831,7 +831,7 @@ read_opus_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 			       "%s:read_opus_chunk: length %lu too short, "
 			       "expected %lu" ,
 			       __FILE__, (unsigned long)data_length,
-			       (unsigned long)23 + disc_ram_length + disc_rom_length );
+			       (unsigned long)( 23UL + disc_ram_length + disc_rom_length ) );
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
@@ -931,8 +931,8 @@ read_plsd_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 			       "%s:read_plsd_chunk: length %lu too short, "
 			       "expected %lu" ,
 			       __FILE__, (unsigned long)data_length,
-			       (unsigned long)19 + disc_ram_length +
-                                 disc_rom_length );
+			       (unsigned long)( 19UL + disc_ram_length +
+			                               disc_rom_length ) );
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
@@ -1008,7 +1008,7 @@ read_plsd_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
                                "has %lu",
 			       __FILE__, 
                                libspectrum_snap_plusd_custom_rom( snap ) ?
-                                 expected_length : 0UL,
+                                 (unsigned long)expected_length : 0UL,
                                (unsigned long)disc_rom_length );
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
@@ -1018,7 +1018,7 @@ read_plsd_chunk( libspectrum_snap *snap, libspectrum_word version GCC_UNUSED,
 			       "%s:read_plsd_chunk: length %lu too short, "
 			       "expected %lu" ,
 			       __FILE__, (unsigned long)data_length,
-			       (unsigned long)19 + disc_ram_length + disc_rom_length );
+			       (unsigned long)( 19UL + disc_ram_length + disc_rom_length ) );
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
@@ -1990,7 +1990,7 @@ read_divxxx_chunk( libspectrum_snap *snap, const libspectrum_byte **buffer,
                                "%s:read_divxxx_chunk: length %lu too short, "
                                "expected %lu",
                                __FILE__, (unsigned long)data_length,
-                               (unsigned long)4 + expected_length );
+                               (unsigned long)( 4UL + expected_length ) );
       return LIBSPECTRUM_ERROR_UNKNOWN;
     }
 
