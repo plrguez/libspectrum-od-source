@@ -95,7 +95,7 @@ GArray*
 g_array_set_size( GArray *array, guint length )
 {
   if( length > array->allocated )
-    expand_array( array, length - array->allocated );
+    expand_array( array, length - array->len );
 
   array->len = length;
 
