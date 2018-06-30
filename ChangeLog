@@ -1,3 +1,13 @@
+2018-06-??  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * libspectrum 1.4.4 released.
+
+        * Various minor bug fixes/improvements:
+          * Fix memory allocation in g_array_set_size() (Sergio Baldoví).
+          * Cast whole expressions in printf() statements (Sergio Baldoví).
+          * Fix up printf() related warnings (Sergio Baldoví).
+          * Fix detection of small files in SZX unit tests (Sergio Baldoví).
+
 2018-06-03  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
         * libspectrum 1.4.3 released.
