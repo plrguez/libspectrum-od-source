@@ -50,8 +50,6 @@ static const char *gcrypt_version;
 struct Library *xfdMasterBase;
 
 struct xfdMasterIFace *IxfdMaster;
-#else 				/* #ifndef __MORPHOS__ */
-struct xfdMasterBase *xfdMasterBase;
 #endif				/* #ifndef __MORPHOS__ */
 
 #endif /* #if defined AMIGA || defined __MORPHOS__ */
@@ -626,9 +624,9 @@ libspectrum_identify_file_raw( libspectrum_id_t *type, const char *filename,
         if( xfdobj = (struct xfdBufferInfo *)IxfdMaster->xfdAllocObject(XFDOBJ_BUFFERINFO) ) {
 #else				/* #ifndef __MORPHOS__ */
     if( xfdMasterBase = OpenLibrary("xfdmaster.library",38 ) ) {
-        if( xfdobj = (struct xfdBufferInfo *)xfdAllocObject(XFDOBJ_BUFFERINFO) ) {
+        if( (xfdobj = (struct xfdBufferInfo *)xfdAllocObject(XFDOBJ_BUFFERINFO)) ) {
 #endif				/* #ifndef __MORPHOS__ */
-          xfdobj->xfdbi_SourceBuffer = buffer;
+          xfdobj->xfdbi_SourceBuffer = (APTR) buffer;
           xfdobj->xfdbi_SourceBufLen = length;
           xfdobj->xfdbi_Flags = XFDFB_RECOGTARGETLEN | XFDFB_RECOGEXTERN;
 
@@ -896,10 +894,10 @@ libspectrum_uncompress_file( unsigned char **new_buffer, size_t *new_length,
               (struct xfdBufferInfo *)IxfdMaster->xfdAllocObject(XFDOBJ_BUFFERINFO) ) {
 #else				/* #ifndef __MORPHOS__ */
       if( xfdMasterBase = OpenLibrary( "xfdmaster.library", 38 ) ) {
-          if( xfdobj = (struct xfdBufferInfo *)xfdAllocObject(XFDOBJ_BUFFERINFO) ) {
+          if( (xfdobj = (struct xfdBufferInfo *)xfdAllocObject(XFDOBJ_BUFFERINFO)) ) {
 #endif				/* #ifndef __MORPHOS__ */
             xfdobj->xfdbi_SourceBufLen = old_length;
-            xfdobj->xfdbi_SourceBuffer = old_buffer;
+            xfdobj->xfdbi_SourceBuffer = (APTR) old_buffer;
             xfdobj->xfdbi_Flags = XFDFB_RECOGEXTERN | XFDFB_RECOGTARGETLEN;
             xfdobj->xfdbi_PackerFlags = XFDPFB_RECOGLEN;
 #ifndef __MORPHOS__
@@ -913,7 +911,7 @@ libspectrum_uncompress_file( unsigned char **new_buffer, size_t *new_length,
 #else				/* #ifndef __MORPHOS__ */
               if( xfdDecrunchBuffer( xfdobj ) ) {
 #endif				/* #ifndef __MORPHOS__ */
-                *new_buffer = libspectrum_new( char, xfdobj->xfdbi_TargetBufSaveLen );
+                *new_buffer = libspectrum_new( unsigned char, xfdobj->xfdbi_TargetBufSaveLen );
                 *new_length = xfdobj->xfdbi_TargetBufSaveLen;
                 memcpy( *new_buffer, xfdobj->xfdbi_TargetBuffer, *new_length );
 #ifndef __MORPHOS__
