@@ -311,6 +311,9 @@ struct libspectrum_snap {
 
   /* ZXMMC status */
   int zxmmc_active;
+
+  /* TTX2000S status */
+  int ttx2000s_active;
 };
 
 /* Initialise a libspectrum_snap structure */

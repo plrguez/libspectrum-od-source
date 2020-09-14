@@ -288,6 +288,8 @@ libspectrum_snap_alloc( void )
 
   libspectrum_snap_set_zxmmc_active( snap, 0 );
 
+  libspectrum_snap_set_ttx2000s_active( snap, 0 );
+
   return snap;
 }
 

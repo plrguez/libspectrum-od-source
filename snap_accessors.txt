@@ -257,3 +257,5 @@ libspectrum_byte* multiface_ram 1
 size_t multiface_ram_length 1
 
 int zxmmc_active
+
+int ttx2000s_active
