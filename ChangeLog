@@ -1,3 +1,9 @@
+2021-??-??  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * Various minor bug fixes/improvements:
+          * Minimal snapshot support for TTX2000S interface (Sergio Baldoví).
+          * Fix prototypes and warnings for MorphOS (Stefan Haubenthal).
+
 2018-07-01  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
         * libspectrum 1.4.4 released.
