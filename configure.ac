@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl Copyright (c) 1999-2018 Philip Kendall
+dnl Copyright (c) 1999-2021 Philip Kendall
 
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -20,12 +20,12 @@ dnl
 dnl E-mail: philip-fuse@shadowmagic.org.uk
 
 dnl Package version
-m4_define([libspectrum_version], [1.4.4])
+m4_define([libspectrum_version], [1.5.0])
 
 dnl Product full version
 m4_define([libspectrum_major_version], [1])
-m4_define([libspectrum_minor_version], [4])
-m4_define([libspectrum_micro_version], [4])
+m4_define([libspectrum_minor_version], [5])
+m4_define([libspectrum_micro_version], [0])
 m4_define([libspectrum_nano_version],  [0])
 m4_define([libspectrum_full_version],
           [libspectrum_major_version.libspectrum_minor_version.libspectrum_micro_version.libspectrum_nano_version])
@@ -33,7 +33,7 @@ m4_define([libspectrum_rc_version],
           [libspectrum_major_version,libspectrum_minor_version,libspectrum_micro_version,libspectrum_nano_version])
 
 dnl Package info
-m4_define([libspectrum_copyright], ["(c) 1999-2018 Philip Kendall and others"])
+m4_define([libspectrum_copyright], ["(c) 1999-2021 Philip Kendall and others"])
 m4_define([libspectrum_url],
           [http://fuse-emulator.sourceforge.net/libspectrum.php])
 m4_define([libspectrum_bugreport],

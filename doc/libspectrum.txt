@@ -1,4 +1,4 @@
-libspectrum 1.4.4
+libspectrum 1.5.0
 =================
 
 libspectrum is a fairly simple library designed to make the handling
