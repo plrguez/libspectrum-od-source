@@ -7,6 +7,7 @@
             Baldoví).
           * Minimal snapshot support for TTX2000S interface (Sergio Baldoví).
           * Fix prototypes and warnings for MorphOS (Stefan Haubenthal).
+          * Change type of len field in GArray to guint (Sergio Baldoví).
 
 2018-07-01  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
