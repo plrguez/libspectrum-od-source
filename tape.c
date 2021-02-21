@@ -911,14 +911,12 @@ libspectrum_tape_raw_data_next_bit( libspectrum_tape_raw_data_block *block,
 
   /* Step through the data until we find an edge */
   do {
+    size_t bits_in_byte = (state->bytes_through_block == block->length - 1) ?
+        block->bits_in_last_byte : 8;
     length++;
-    if( ++(state->bits_through_byte) == 8 ) {
-      if( ++(state->bytes_through_block) == block->length - 1 ) {
-	state->bits_through_byte = 8 - block->bits_in_last_byte;
-      } else {
-	state->bits_through_byte = 0;
-      }
-      if( state->bytes_through_block == block->length )
+    if( ++(state->bits_through_byte) == bits_in_byte ) {
+      state->bits_through_byte = 0;
+      if( ++(state->bytes_through_block) == block->length )
 	break;
     }
   } while( ( block->data[state->bytes_through_block] <<
