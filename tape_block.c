@@ -328,10 +328,10 @@ raw_data_init( libspectrum_tape_raw_data_block *block,
 {
   if( block->data ) {
 
-    /* We're just before the start of the data */
+    /* We're right at the start of the data */
     state->state = LIBSPECTRUM_TAPE_STATE_DATA1;
-    state->bytes_through_block = -1; state->bits_through_byte = 7;
-    state->last_bit = 0x80 & block->data[0];
+    state->bytes_through_block = 0; state->bits_through_byte = 0;
+    state->last_bit = (0x80 & block->data[0]) ^ 0x80;
     /* Set up the next bit */
     libspectrum_tape_raw_data_next_bit( block, state );
 

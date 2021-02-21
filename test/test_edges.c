@@ -200,11 +200,10 @@ static test_edge_sequence_t
 raw_edges_list[] =
 {
   /* RAW block with end of tape edge */
-  {   542,   1,  16 },	/* Pulse 1 low */
-  {  2168,   1,  32 },	/* Pulse 2 high */
-  {  2168,   1,  16 },	/* Pulse 3 low */
-  {  2168,   1,  32 },	/* Pulse 4 high */
-  {  2168,   1,  16 },	/* Pulse 5 low */
+  {  2168,   1,  32 },	/* Pulse 1 high */
+  {  2168,   1,  16 },	/* Pulse 2 low */
+  {  2168,   1,  32 },	/* Pulse 3 high */
+  {  2168,   1,  16 },	/* Pulse 4 low */
   {     0,   1, 259 },	/* End of block, end of tape, stop the tape (normally no
                            edge but not at end of tape) */
 
@@ -212,7 +211,8 @@ raw_edges_list[] =
 
 };
 
-/* Test for bugs #369: TZX raw block last edge handling */
+/* Test for bugs #369: TZX raw block last edge handling and #444: Spurious
+   pulse at the beginning of a raw data block */
 test_return_t
 test_73( void )
 {
