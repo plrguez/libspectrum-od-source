@@ -903,6 +903,7 @@ libspectrum_tape_raw_data_next_bit( libspectrum_tape_raw_data_block *block,
 
   if( state->bytes_through_block == block->length ) {
     state->state = LIBSPECTRUM_TAPE_STATE_PAUSE;
+    state->last_bit ^= 0x80;
     return;
   }
 

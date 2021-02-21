@@ -195,3 +195,27 @@ test_29( void )
   return check_edges( DYNAMIC_TEST_PATH( "no-pilot-gdb.tzx" ),
                       no_pilot_gdb_list, 0x1ff );
 }
+
+static test_edge_sequence_t
+raw_edges_list[] =
+{
+  /* RAW block with end of tape edge */
+  {   542,   1,  16 },	/* Pulse 1 low */
+  {  2168,   1,  32 },	/* Pulse 2 high */
+  {  2168,   1,  16 },	/* Pulse 3 low */
+  {  2168,   1,  32 },	/* Pulse 4 high */
+  {  2168,   1,  16 },	/* Pulse 5 low */
+  {     0,   1, 259 },	/* End of block, end of tape, stop the tape (normally no
+                           edge but not at end of tape) */
+
+  { -1, 0, 0 }		/* End marker */
+
+};
+
+/* Test for bugs #369: TZX raw block last edge handling */
+test_return_t
+test_73( void )
+{
+  return check_edges( DYNAMIC_TEST_PATH( "raw-data-block.tzx" ),
+                      raw_edges_list, 0xffff );
+}

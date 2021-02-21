@@ -5,6 +5,7 @@
         * Various minor bug fixes/improvements:
           * Autogenerate code for initialising/freeing snap structure (Sergio
             Baldoví).
+          * Fix loading of raw data blocks (Alberto Garcia).
           * Minimal snapshot support for TTX2000S interface (Sergio Baldoví).
           * Fix prototypes and warnings for MorphOS (Stefan Haubenthal).
           * Change type of len field in GArray to guint (Sergio Baldoví).

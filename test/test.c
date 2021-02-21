@@ -975,7 +975,8 @@ static struct test_description tests[] = {
   { test_69, "Read uncompressed SZX ATRP chunk", 0 },
   { test_70, "Read uncompressed SZX CFRP chunk", 0 },
   { test_71, "Write RZX with incompressible snap", 0 },
-  { test_72, "Tape peek next block", 0 }
+  { test_72, "Tape peek next block", 0 },
+  { test_73, "Read TZX RAW block edge handling", 0 }
 };
 
 static size_t test_count = ARRAY_SIZE( tests );
