@@ -223,3 +223,37 @@ test_73( void )
   return check_edges( DYNAMIC_TEST_PATH( "raw-data-block.tzx" ),
                       raw_edges_list, 0xffff );
 }
+
+static test_edge_sequence_t
+trailing_pause_edges_list[] =
+{
+  /* Standard speed data block */
+  { 2168, 3223, 0 },	/* Pilot */
+  {  667,    1, 0 },	/* Sync 1 */
+  {  735,    1, 0 },	/* Sync 2 */
+
+  { 1710,    2, 128 },	/* Bit 1 */
+  { 1710,    2, 128 },	/* Bit 2 */
+  { 1710,    2, 128 },	/* Bit 3 */
+  { 1710,    2, 128 },	/* Bit 4 */
+  { 1710,    2, 128 },	/* Bit 5 */
+  { 1710,    2, 128 },	/* Bit 6 */
+  { 1710,    2, 128 },	/* Bit 7 */
+  { 1710,    2, 128 },	/* Bit 8 */
+
+  { 0, 1, 9 },	/* 0ms Trailing pause End of block, no edge */
+
+  /* 1s Pause block */
+  { 3500000, 1, 259 },	/* Pulse End of block, end of tape, stop the tape
+                           (should have an edge) */
+
+  { -1, 0, 0 }		/* End marker */
+
+};
+
+test_return_t
+test_74( void )
+{
+  return check_edges( DYNAMIC_TEST_PATH( "trailing-pause-block.tzx" ),
+                      trailing_pause_edges_list, 0xffff );
+}

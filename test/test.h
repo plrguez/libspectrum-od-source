@@ -32,6 +32,7 @@ test_return_t test_15( void );
 test_return_t test_28( void );
 test_return_t test_29( void );
 test_return_t test_73( void );
+test_return_t test_74( void );
 
 /* SZX write tests */
 test_return_t test_31( void );
