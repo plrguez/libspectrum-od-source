@@ -1,4 +1,4 @@
-2021-02-20  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+2021-02-27  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
         * libspectrum 1.5.0 released.
 
@@ -6,6 +6,11 @@
           * Autogenerate code for initialising/freeing snap structure (Sergio
             Baldoví).
           * Fix loading of raw data blocks (Alberto Garcia).
+          * Ensure trailing TZX pause blocks result in an edge (Alberto
+            Garcia).
+          * Fix bits_through_byte calculation in TZX RAW block (Alberto
+            Garcia).
+          * Remove spurious first pulse in a raw data block (Alberto Garcia).
           * Minimal snapshot support for TTX2000S interface (Sergio Baldoví).
           * Fix prototypes and warnings for MorphOS (Stefan Haubenthal).
           * Change type of len field in GArray to guint (Sergio Baldoví).
