@@ -10,6 +10,7 @@
 /config.status
 /config.sub
 /configure
+cscope.out
 .DS_Store
 /depcomp
 .deps

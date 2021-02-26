@@ -21,7 +21,7 @@
 
 */
 
-#include <config.h>
+#include "config.h"
 #include <string.h>
 
 #ifdef HAVE_LIB_AUDIOFILE

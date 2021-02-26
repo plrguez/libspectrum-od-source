@@ -25,7 +25,7 @@
    file. It very deliberately does not use any of the core libspectrum code for
    this as that would defeat the point of a unit test */
 
-#include <config.h>
+#include "config.h"
 
 #include <stdio.h>
 #include <string.h>
