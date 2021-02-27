@@ -60,6 +60,7 @@ EXTRA_DIST += \
 	test/no-pilot-gdb.tzx \
 	test/plus3.z80 \
 	test/random.szx \
+	test/raw-data-block.tzx \
 	test/sp-2000.sna.gz \
 	test/sp-ffff.sna.gz \
 	test/standard-tap.tap \
@@ -83,6 +84,7 @@ EXTRA_DIST += \
 	test/szx-chunks/ZXAT.szx \
 	test/szx-chunks/ZXCF.szx \
 	test/szx-chunks/ZXPR.szx \
+	test/trailing-pause-block.tzx \
 	test/turbo-zeropilot.tzx \
 	test/writeprotected.mdr \
 	test/zero-tail.pzx
