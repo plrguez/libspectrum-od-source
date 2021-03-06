@@ -2,6 +2,8 @@
 
         * Various minor bug fixes/improvements:
           * Fix PZX handling on big endian systems (Alberto Garcia).
+          * Hide all symbols except the ones in the public API (Alberto
+            Garcia).
           * Run tests on 'make check' invocation (Alberto Garcia).
 
 2021-02-27  Philip Kendall  <philip-fuse@shadowmagic.org.uk>

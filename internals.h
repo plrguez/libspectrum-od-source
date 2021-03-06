@@ -190,6 +190,7 @@ libspectrum_sp_read( libspectrum_snap *snap,
 libspectrum_error
 libspectrum_szx_read( libspectrum_snap *snap,
 		      const libspectrum_byte *buffer, size_t buffer_length );
+LIBSPECTRUM_API /* FIXME: we shouldn't export this but test/szx.c is using it */
 libspectrum_error
 libspectrum_szx_write( libspectrum_buffer *buffer, int *out_flags,
                        libspectrum_snap *snap, libspectrum_creator *creator,

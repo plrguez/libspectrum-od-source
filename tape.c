@@ -1250,7 +1250,7 @@ libspectrum_tape_peek_next_block( libspectrum_tape *tape )
 }
 
 /* Peek at the last block on the tape */
-libspectrum_tape_block WIN32_DLL *
+libspectrum_tape_block LIBSPECTRUM_API *
 libspectrum_tape_peek_last_block( libspectrum_tape *tape )
 {
   return tape->last_block ? tape->last_block->data : NULL;

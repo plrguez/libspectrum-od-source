@@ -95,7 +95,7 @@ noinst_DATA =
 # PKG_INSTALLDIR in configure.ac.
 pkgconfig_DATA = libspectrum.pc
 
-AM_CFLAGS = -DLIBSPECTRUM_EXPORTS
+AM_CFLAGS = -DLIBSPECTRUM_EXPORTS -fvisibility=hidden
 
 make-perl$(EXEEXT): $(srcdir)/make-perl.c config.h
 	$(AM_V_CC)$(CC_FOR_BUILD) -I. -o $@ $<
