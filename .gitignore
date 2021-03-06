@@ -48,7 +48,11 @@ cscope.out
 /tags
 /tape_accessors.c
 /tape_set.c
+/test-driver
+/test-suite.log
 /test/complete-tzx.tzx
 /test/test
 /test/test.exe
+/test/test.log
+/test/test.trs
 .vscode

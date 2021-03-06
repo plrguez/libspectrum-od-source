@@ -21,6 +21,8 @@
 
 check_PROGRAMS = test/test
 
+TESTS = $(check_PROGRAMS)
+
 test_test_SOURCES = \
 	test/edges.c \
 	test/szx.c \
