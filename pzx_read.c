@@ -92,7 +92,7 @@ typedef libspectrum_error (*read_block_fn)( libspectrum_tape *tape,
 
 static libspectrum_error
 pzx_read_data( const libspectrum_byte **ptr, const libspectrum_byte *end,
-	       size_t length, libspectrum_byte **data );
+	       int count, size_t width, libspectrum_byte **data );
 
 static libspectrum_error
 pzx_read_string( const libspectrum_byte **ptr, const libspectrum_byte *end,
@@ -271,17 +271,17 @@ read_data_block( libspectrum_tape *tape, const libspectrum_byte **buffer,
   }
 
   error = pzx_read_data( buffer, block_end,
-                         p0_count * sizeof( libspectrum_word ),
+                         p0_count, sizeof( libspectrum_word ),
                          (libspectrum_byte**)&p0_pulses );
   if( error ) return error;
 
   error = pzx_read_data( buffer, block_end,
-                         p1_count * sizeof( libspectrum_word ),
+                         p1_count, sizeof( libspectrum_word ),
                          (libspectrum_byte**)&p1_pulses );
   if( error ) { libspectrum_free( p0_pulses ); return error; }
 
   /* And the actual data */
-  error = pzx_read_data( buffer, block_end, count_bytes, &data );
+  error = pzx_read_data( buffer, block_end, count_bytes, 1, &data );
   if( error ) {
     libspectrum_free( p0_pulses );
     libspectrum_free( p1_pulses );
@@ -612,8 +612,9 @@ internal_pzx_read( libspectrum_tape *tape, const libspectrum_byte *buffer,
 
 static libspectrum_error
 pzx_read_data( const libspectrum_byte **ptr, const libspectrum_byte *end,
-	       size_t length, libspectrum_byte **data )
+	       int count, size_t width, libspectrum_byte **data )
 {
+  size_t length = count * width;
   /* Have we got enough bytes left in buffer? */
   if( ( end - (*ptr) ) < (ptrdiff_t)(length) ) {
     libspectrum_print_error( LIBSPECTRUM_ERROR_CORRUPT,
@@ -626,7 +627,15 @@ pzx_read_data( const libspectrum_byte **ptr, const libspectrum_byte *end,
   if( length ) {
     *data = libspectrum_new( libspectrum_byte, length );
     /* Copy the block data across, and move along */
-    memcpy( *data, *ptr, length ); *ptr += length;
+    if( width == sizeof( libspectrum_word ) ) {
+      int i;
+      libspectrum_word *dst = (libspectrum_word *) *data;
+      for( i = 0; i < count; i++ ) {
+        dst[i] = libspectrum_read_word( ptr );
+      }
+    } else {
+      memcpy( *data, *ptr, length ); *ptr += length;
+    }
   } else {
     *data = NULL;
   }

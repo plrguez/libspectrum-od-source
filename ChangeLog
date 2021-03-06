@@ -1,3 +1,8 @@
+2021-??-??  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
+
+        * Various minor bug fixes/improvements:
+          * Fix PZX handling on big endian systems (Alberto Garcia).
+
 2021-02-27  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
         * libspectrum 1.5.0 released.
