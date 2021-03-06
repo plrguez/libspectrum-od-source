@@ -824,7 +824,6 @@ test_72( void )
   size_t filesize = 0;
   libspectrum_tape *tape;
   libspectrum_tape_iterator it;
-  libspectrum_tape_block *block;
   libspectrum_tape_type expected_next_block_types[19] = {
     LIBSPECTRUM_TAPE_BLOCK_TURBO,       /* ROM */
     LIBSPECTRUM_TAPE_BLOCK_PURE_TONE,   /* Turbo */
@@ -867,7 +866,7 @@ test_72( void )
 
   libspectrum_free( buffer );
 
-  block = libspectrum_tape_iterator_init( &it, tape );
+  libspectrum_tape_iterator_init( &it, tape );
 
   while( libspectrum_tape_iterator_peek_next( it ) )
   {
@@ -880,7 +879,7 @@ test_72( void )
       break;
     }
 
-    block = libspectrum_tape_iterator_next( &it );
+    libspectrum_tape_iterator_next( &it );
     next_block_type++;
     blocks_processed++;
   }
