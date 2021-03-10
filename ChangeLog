@@ -5,6 +5,7 @@
           * Hide all symbols except the ones in the public API (Alberto
             Garcia).
           * Run tests on 'make check' invocation (Alberto Garcia).
+          * Don't generate an edge for the STOP48 TZX block (Fredrick Meunier).
 
 2021-02-27  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 

@@ -437,7 +437,10 @@ libspectrum_tape_get_next_edge_internal( libspectrum_dword *tstates,
       break;
 
     case LIBSPECTRUM_TAPE_BLOCK_STOP48:
-      *tstates = 0; *flags |= LIBSPECTRUM_TAPE_FLAGS_STOP48; end_of_block = 1;
+      *tstates = 0;
+      *flags |= LIBSPECTRUM_TAPE_FLAGS_STOP48;
+      *flags |= LIBSPECTRUM_TAPE_FLAGS_NO_EDGE;
+      end_of_block = 1;
       break;
 
     case LIBSPECTRUM_TAPE_BLOCK_SET_SIGNAL_LEVEL:
