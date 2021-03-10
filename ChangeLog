@@ -6,6 +6,8 @@
             Garcia).
           * Run tests on 'make check' invocation (Alberto Garcia).
           * Don't generate an edge for the STOP48 TZX block (Fredrick Meunier).
+          * Use local include directives for config.h and libspectrum.h
+            (Fredrick Meunier).
 
 2021-02-27  Philip Kendall  <philip-fuse@shadowmagic.org.uk>
 
