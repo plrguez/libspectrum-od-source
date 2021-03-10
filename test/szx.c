@@ -42,7 +42,8 @@ typedef struct szx_chunk_t {
 } szx_chunk_t;
 
 static szx_chunk_t*
-find_szx_chunk( libspectrum_buffer *buffer, const char *search )
+find_szx_chunk( libspectrum_byte *in_buffer, size_t in_buffer_length,
+                const char *search )
 {
   libspectrum_byte *data;
   size_t data_remaining;
@@ -50,8 +51,8 @@ find_szx_chunk( libspectrum_buffer *buffer, const char *search )
   libspectrum_byte length_buffer[4];
   libspectrum_dword length;
 
-  data = libspectrum_buffer_get_data( buffer );
-  data_remaining = libspectrum_buffer_get_data_size( buffer );
+  data = in_buffer;
+  data_remaining = in_buffer_length;
 
   if( data_remaining < 8 ) {
     fprintf( stderr, "SZX file is less than 8 bytes long\n" );
@@ -102,12 +103,11 @@ szx_write_block_test_with_flags( const char *id, libspectrum_machine machine,
     libspectrum_byte *expected, size_t expected_length, size_t total_length )
 {
   libspectrum_snap *snap;
-  libspectrum_buffer *buffer;
+  libspectrum_byte *buffer; size_t length;
   int out_flags;
   szx_chunk_t *chunk;
+  size_t i;
   test_return_t r = TEST_INCOMPLETE;
-
-  buffer = libspectrum_buffer_alloc();
 
   snap = libspectrum_snap_alloc();
 
@@ -115,16 +115,20 @@ szx_write_block_test_with_flags( const char *id, libspectrum_machine machine,
 
   setter( snap );
 
-  libspectrum_szx_write( buffer, &out_flags, snap, NULL, flags );
+  length = 0;
+  buffer = NULL;
+  libspectrum_snap_write( &buffer, &length, &out_flags, snap,
+                          LIBSPECTRUM_ID_SNAPSHOT_SZX, NULL, flags );
   libspectrum_snap_free( snap );
 
-  chunk = find_szx_chunk( buffer, id );
+  chunk = find_szx_chunk( buffer, length, id );
   if( !chunk ) {
     fprintf( stderr, "Chunk not found\n" );
+    libspectrum_free( buffer );
     return TEST_FAIL;
   }
 
-  libspectrum_buffer_free( buffer );
+  libspectrum_free( buffer );
 
   if( chunk->length == total_length ) {
     if( memcmp( chunk->data, expected, expected_length ) ) {
@@ -132,7 +136,7 @@ szx_write_block_test_with_flags( const char *id, libspectrum_machine machine,
       r = TEST_FAIL;
     } else {
       r = TEST_PASS;
-      for( size_t i = expected_length; i < total_length; i++ ) {
+      for( i = expected_length; i < total_length; i++ ) {
         if( chunk->data[i] ) {
           r = TEST_FAIL;
           break;
