@@ -3517,7 +3517,6 @@ write_if1_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
 {
   libspectrum_byte *rom_data = NULL; 
   libspectrum_buffer *rom_buffer;
-  libspectrum_word disk_rom_length = 0;
   libspectrum_word uncompressed_rom_length = 0;
   libspectrum_word flags = 0;
   int use_compression;
@@ -3545,7 +3544,7 @@ write_if1_chunk( libspectrum_buffer *buffer, libspectrum_buffer *data,
                                  snap, 0 ) );
       return LIBSPECTRUM_ERROR_LOGIC;
     }
-    uncompressed_rom_length = disk_rom_length =
+    uncompressed_rom_length =
       libspectrum_snap_interface1_rom_length( snap, 0 );
   }
 
