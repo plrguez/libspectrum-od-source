@@ -776,7 +776,7 @@ libspectrum_uncompress_file( unsigned char **new_buffer, size_t *new_length,
   }
 
   if( new_filename && old_filename ) {
-    *new_filename = strdup( old_filename );
+    *new_filename = libspectrum_safe_strdup( old_filename );
     if( !*new_filename ) {
       libspectrum_print_error( LIBSPECTRUM_ERROR_MEMORY,
 			       "out of memory at %s:%d", __FILE__, __LINE__ );

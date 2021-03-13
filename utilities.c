@@ -64,3 +64,18 @@ libspectrum_bits_to_bytes( size_t bits )
 {
   return ( bits + LIBSPECTRUM_BITS_IN_BYTE - 1 ) / LIBSPECTRUM_BITS_IN_BYTE;
 }
+
+char*
+libspectrum_safe_strdup( const char *src )
+{
+  size_t length;
+  char *dest = NULL;
+
+  if( src ) {
+    length = strlen( src ) + 1;
+    dest = libspectrum_new( char, length );
+    memcpy( dest, src, length );
+  }
+
+  return dest;
+}

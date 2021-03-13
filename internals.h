@@ -362,6 +362,9 @@ libspectrum_bits_to_bytes( size_t bits );
 
 extern const int LIBSPECTRUM_BITS_IN_BYTE;
 
+char*
+libspectrum_safe_strdup( const char *src );
+
 /* glib replacement functions */
 
 #ifndef HAVE_LIB_GLIB		/* Only if we are using glib replacement */
