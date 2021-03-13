@@ -27,6 +27,9 @@
 #include "config.h"
 
 #include <string.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>		/* Needed for strcasecmp() on QNX6 */
+#endif				/* #ifdef HAVE_STRINGS_H */
 
 #define ZLIB_CONST
 #include <zlib.h>
