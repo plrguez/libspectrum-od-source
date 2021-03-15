@@ -23,6 +23,10 @@
 
 #include "config.h"
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif				/* #ifdef HAVE_STRING_H */
+
 #include "internals.h"
 
 #define TZX_HZ 3500000
